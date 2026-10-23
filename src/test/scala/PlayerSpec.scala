@@ -7,7 +7,7 @@ class PlayerSpec extends AnyWordSpec with Matchers {
   "A Player" should {
 
     "have the correct initial values" in {
-      val player = new Player(1)
+      val player = Player(1)
 
       player.id shouldBe 1
       player.perRoundActions shouldBe 1
@@ -16,25 +16,19 @@ class PlayerSpec extends AnyWordSpec with Matchers {
     }
 
     "allow changing per-round actions" in {
-      val player = new Player(1)
-
-      player.perRoundActions = 3
+      val player = Player(1, perRoundActions = 3)
 
       player.perRoundActions shouldBe 3
     }
 
     "allow changing per-round money" in {
-      val player = new Player(1)
-
-      player.perRoundMoney = 5
-
+      val player = Player(1, perRoundMoney = 5)
+      
       player.perRoundMoney shouldBe 5
     }
 
     "allow changing per-round buys" in {
-      val player = new Player(1)
-
-      player.perRoundBuys = 2
+      val player = Player(1, perRoundBuys = 2)
 
       player.perRoundBuys shouldBe 2
     }
