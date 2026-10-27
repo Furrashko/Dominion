@@ -27,8 +27,8 @@ def readNumberOfPlayers(
 }
 
 def initGame(
-              readInput: () => String = () => readLine(),
-              printMessage: String => Unit = message => println(message)
+              readInput: () => String,
+              printMessage: String => Unit
             ): Unit = {
   val numberOfPlayers = readNumberOfPlayers(readInput, printMessage)
 
@@ -95,7 +95,7 @@ def runGameMenu(
             if (input.isEmpty)
               printMessage("Empty Input")
             else
-              printMessage("Invalid/unknown input")
+              printMessage("Invalid/Unknown input")
 
             loop()
         }
@@ -117,7 +117,10 @@ def runGameMenu(
         println("Cheat Mode selected.")
 
       case GameMode.StandardDeck =>
-        initGame()
+        initGame(
+          readInput = () => readLine(),
+          printMessage = message => println(message)
+        )
 
       case _ =>
         ()
