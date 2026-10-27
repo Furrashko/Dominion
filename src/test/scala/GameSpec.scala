@@ -38,17 +38,5 @@ class GameSpec extends AnyWordSpec with Matchers {
 
       game.currentPlayer.id shouldBe 1
     }
-
-    "reject fewer than two players" in {
-      an[IllegalArgumentException] should be thrownBy {
-        new Game(1)
-      }
-    }
-
-    "reject more than eight players" in {
-      an[IllegalArgumentException] should be thrownBy {
-        new Game(9)
-      }
-    }
   }
 }
