@@ -5,49 +5,59 @@ import scala.collection.mutable
 
 class InitGameSpec extends AnyWordSpec with Matchers {
 
-  "parseNumberOfPlayers" should {
+  "parseNumberInput" should {
 
-    "accept integers between 2 and 8" in {
-      parseNumberOfPlayers("2") shouldBe Some(2)
-      parseNumberOfPlayers("5") shouldBe Some(5)
-      parseNumberOfPlayers("8") shouldBe Some(8)
+    "accept integers within the specified range" in {
+      parseNumberInput("2", 2, 8) shouldBe Some(2)
+      parseNumberInput("5", 2, 8) shouldBe Some(5)
+      parseNumberInput("8", 2, 8) shouldBe Some(8)
     }
 
-    "reject integers below 2" in {
-      parseNumberOfPlayers("0") shouldBe None
-      parseNumberOfPlayers("1") shouldBe None
-      parseNumberOfPlayers("-2") shouldBe None
+    "reject integers below the specified range" in {
+      parseNumberInput("0", 2, 8) shouldBe None
+      parseNumberInput("1", 2, 8) shouldBe None
+      parseNumberInput("-2", 2, 8) shouldBe None
     }
 
-    "reject integers above 8" in {
-      parseNumberOfPlayers("9") shouldBe None
+    "reject integers above the specified range" in {
+      parseNumberInput("9", 2, 8) shouldBe None
+    }
+
+    "work with different ranges" in {
+      parseNumberInput("1", 1, 20) shouldBe Some(1)
+      parseNumberInput("20", 1, 20) shouldBe Some(20)
+      parseNumberInput("21", 1, 20) shouldBe None
     }
 
     "reject text" in {
-      parseNumberOfPlayers("abc") shouldBe None
+      parseNumberInput("abc", 2, 8) shouldBe None
     }
 
     "reject decimal numbers" in {
-      parseNumberOfPlayers("3.5") shouldBe None
+      parseNumberInput("3.5", 2, 8) shouldBe None
     }
 
     "reject empty input" in {
-      parseNumberOfPlayers("") shouldBe None
+      parseNumberInput("", 2, 8) shouldBe None
     }
   }
 
-  "readNumberOfPlayers" should {
+  "readNumberInput" should {
 
     "return the number for valid input" in {
       val inputs = mutable.Queue("4")
       val messages = mutable.Queue.empty[String]
 
-      val result = readNumberOfPlayers(
+      val result = readNumberInput(
         () => inputs.dequeue(),
-        message => messages.enqueue(message)
+        message => messages.enqueue(message),
+        2,
+        8
       )
 
-      messages should contain("Enter number of Players:")
+      messages should contain(
+        "Enter an integer between 2 and 8:"
+      )
       result shouldBe 4
     }
 
@@ -55,9 +65,11 @@ class InitGameSpec extends AnyWordSpec with Matchers {
       val inputs = mutable.Queue("abc", "5")
       val messages = mutable.Queue.empty[String]
 
-      val result = readNumberOfPlayers(
+      val result = readNumberInput(
         () => inputs.dequeue(),
-        message => messages.enqueue(message)
+        message => messages.enqueue(message),
+        2,
+        8
       )
 
       result shouldBe 5
@@ -70,18 +82,44 @@ class InitGameSpec extends AnyWordSpec with Matchers {
       val inputs = mutable.Queue("abc", "1", "9", "3")
       val messages = mutable.Queue.empty[String]
 
-      val result = readNumberOfPlayers(
+      val result = readNumberInput(
         () => inputs.dequeue(),
-        message => messages.enqueue(message)
+        message => messages.enqueue(message),
+        2,
+        8
       )
 
       result shouldBe 3
 
-      messages.count(_ == "Enter number of Players:") shouldBe 4
+      messages.count(
+        _ == "Enter an integer between 2 and 8:"
+      ) shouldBe 4
 
       messages.count(
         _ == "Invalid input! Enter an integer between 2 and 8."
       ) shouldBe 3
+    }
+
+    "use the specified range in the messages and validation" in {
+      val inputs = mutable.Queue("0", "15")
+      val messages = mutable.Queue.empty[String]
+
+      val result = readNumberInput(
+        () => inputs.dequeue(),
+        message => messages.enqueue(message),
+        1,
+        20
+      )
+
+      result shouldBe 15
+
+      messages should contain(
+        "Enter an integer between 1 and 20:"
+      )
+
+      messages should contain(
+        "Invalid input! Enter an integer between 1 and 20."
+      )
     }
   }
 

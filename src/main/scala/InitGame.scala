@@ -1,23 +1,33 @@
 import scala.annotation.tailrec
 
-def parseNumberOfPlayers(input: String): Option[Int] =
-  input.toIntOption.filter(number => number >= 2 && number <= 8)
+def parseNumberInput(
+                      input: String,
+                      min: Int,
+                      max: Int
+                    ): Option[Int] =
+  input.toIntOption.filter(number => number >= min && number <= max)
 
-def readNumberOfPlayers(
-                         readInput: () => String,
-                         printMessage: String => Unit
-                       ): Int = {
+def readNumberInput(
+                     readInput: () => String,
+                     printMessage: String => Unit,
+                     min: Int,
+                     max: Int
+                   ): Int = {
 
   @tailrec
   def loop(): Int = {
-    printMessage("Enter number of Players:")
+    printMessage(s"Enter an integer between $min and $max:")
 
-    Option(readInput()).flatMap(parseNumberOfPlayers) match {
+    Option(readInput()).flatMap(input =>
+      parseNumberInput(input, min, max)
+    ) match {
       case Some(number) =>
         number
 
       case None =>
-        printMessage("Invalid input! Enter an integer between 2 and 8.")
+        printMessage(
+          s"Invalid input! Enter an integer between $min and $max."
+        )
         loop()
     }
   }
@@ -28,7 +38,7 @@ def readNumberOfPlayers(
 class InitGame(
                 readInput: () => String, 
                 printMessage: String => Unit) {
-  private val playerCount = readNumberOfPlayers(readInput, printMessage)
+  private val playerCount = readNumberInput(readInput, printMessage, 2, 8)
 
   private val players: Vector[Player] =
     (1 to playerCount).map(id => new Player(id)).toVector
