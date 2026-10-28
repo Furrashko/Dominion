@@ -15,19 +15,19 @@ class PlayerSpec extends AnyWordSpec with Matchers {
       player.perRoundBuys shouldBe 1
     }
 
-    "allow changing per-round actions" in {
+    "allow setting per-round actions" in {
       val player = Player(1, perRoundActions = 3)
 
       player.perRoundActions shouldBe 3
     }
 
-    "allow changing per-round money" in {
+    "allow setting per-round money" in {
       val player = Player(1, perRoundMoney = 5)
       
       player.perRoundMoney shouldBe 5
     }
 
-    "allow changing per-round buys" in {
+    "allow setting per-round buys" in {
       val player = Player(1, perRoundBuys = 2)
 
       player.perRoundBuys shouldBe 2
