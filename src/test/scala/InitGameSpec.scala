@@ -85,9 +85,9 @@ class InitGameSpec extends AnyWordSpec with Matchers {
     }
   }
 
-  "An InitGame" should {
+  "InitGame" should {
 
-    "initialize the correct number of players" in {
+    "initialize with the first player" in {
       val game = new InitGame(
         readInput = () => "3",
         printMessage = _ => ()
@@ -96,16 +96,7 @@ class InitGameSpec extends AnyWordSpec with Matchers {
       game.currentPlayer.id shouldBe 1
     }
 
-    "return the current player" in {
-      val game = new InitGame(
-        readInput = () => "3",
-        printMessage = _ => ()
-      )
-
-      game.currentPlayer.id shouldBe 1
-    }
-
-    "advance to the next player" in {
+    "return the next player after nextTurn" in {
       val game = new InitGame(
         readInput = () => "3",
         printMessage = _ => ()
@@ -116,32 +107,44 @@ class InitGameSpec extends AnyWordSpec with Matchers {
       game.currentPlayer.id shouldBe 2
     }
 
-    "advance through all players and return to the first player" in {
+    "return to the first player after the last player" in {
       val game = new InitGame(
-        readInput = () => "3",
+        readInput = () => "2",
         printMessage = _ => ()
       )
 
       game.nextTurn()
-      game.nextTurn()
-
-      game.currentPlayer.id shouldBe 3
+      game.currentPlayer.id shouldBe 2
 
       game.nextTurn()
-
       game.currentPlayer.id shouldBe 1
     }
 
-    "support a game with only one player" in {
+    "support the minimum valid number of players" in {
       val game = new InitGame(
-        readInput = () => "1",
+        readInput = () => "2",
         printMessage = _ => ()
       )
 
       game.currentPlayer.id shouldBe 1
 
       game.nextTurn()
+      game.currentPlayer.id shouldBe 2
+    }
 
+    "support the maximum valid number of players" in {
+      val game = new InitGame(
+        readInput = () => "8",
+        printMessage = _ => ()
+      )
+
+      game.currentPlayer.id shouldBe 1
+
+      (1 to 7).foreach(_ => game.nextTurn())
+
+      game.currentPlayer.id shouldBe 8
+
+      game.nextTurn()
       game.currentPlayer.id shouldBe 1
     }
   }
