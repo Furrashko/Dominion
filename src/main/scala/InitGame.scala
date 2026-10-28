@@ -70,7 +70,7 @@ class InitGame(
   println(s"Playset selected: ${playSet.displayName}")
 
   private val players: Vector[Player] =
-    (1 to playerCount).map(id => new Player(id)).toVector
+    (1 to playerCount).map(id => Player(id)).toVector
 
   private var currentPlayerIndex: Int = 0
 
