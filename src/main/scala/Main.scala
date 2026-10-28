@@ -1,42 +1,6 @@
 import scala.annotation.tailrec
 import scala.io.StdIn.readLine
 
-def parseNumberOfPlayers(input: String): Option[Int] =
-  input.toIntOption.filter(number => number >= 2 && number <= 8)
-
-def readNumberOfPlayers(
-                         readInput: () => String,
-                         printMessage: String => Unit
-                       ): Int = {
-
-  @tailrec
-  def loop(): Int = {
-    printMessage("Enter number of Players:")
-
-    Option(readInput()).flatMap(parseNumberOfPlayers) match {
-      case Some(number) =>
-        number
-
-      case None =>
-        printMessage("Invalid input! Enter an integer between 2 and 8.")
-        loop()
-    }
-  }
-
-  loop()
-}
-
-def initGame(
-              readInput: () => String,
-              printMessage: String => Unit
-            ): Unit = {
-  val numberOfPlayers = readNumberOfPlayers(readInput, printMessage)
-
-  printMessage(s"Number of Players: $numberOfPlayers")
-
-  val game = new Game(numberOfPlayers)
-}
-
 enum GameMode:
   case CheatMode
   case StandardDeck
@@ -77,10 +41,10 @@ def runGameMenu(
       case Some(input) =>
         parseGameMode(input) match {
           case GameMode.Exit =>
-            printMessage("Exiting Dominion…")
+            printMessage("Exiting Dominion...")
 
           case GameMode.Help =>
-            printMessage("print help… feature coming soon™")
+            printMessage("print help... feature coming soon™")
             loop()
 
           case GameMode.CheatMode =>
@@ -117,7 +81,7 @@ def runGameMenu(
         println("Cheat Mode selected.")
 
       case GameMode.StandardDeck =>
-        initGame(
+        val game = new InitGame(
           readInput = () => readLine(),
           printMessage = message => println(message)
         )

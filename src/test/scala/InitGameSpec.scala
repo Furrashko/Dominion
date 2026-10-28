@@ -1,188 +1,148 @@
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatest.matchers.should.Matchers
 
+import scala.collection.mutable
+
 class InitGameSpec extends AnyWordSpec with Matchers {
-  "parseGameMode" should {
 
-    "return CheatMode for input 0" in {
-      parseGameMode("0") shouldBe GameMode.CheatMode
+  "parseNumberOfPlayers" should {
+
+    "accept integers between 2 and 8" in {
+      parseNumberOfPlayers("2") shouldBe Some(2)
+      parseNumberOfPlayers("5") shouldBe Some(5)
+      parseNumberOfPlayers("8") shouldBe Some(8)
     }
 
-    "return StarterDeck for input 1" in {
-      parseGameMode("1") shouldBe GameMode.StandardDeck
+    "reject integers below 2" in {
+      parseNumberOfPlayers("0") shouldBe None
+      parseNumberOfPlayers("1") shouldBe None
+      parseNumberOfPlayers("-2") shouldBe None
     }
 
-    "return Help for input help" in {
-      parseGameMode("help") shouldBe GameMode.Help
+    "reject integers above 8" in {
+      parseNumberOfPlayers("9") shouldBe None
     }
 
-    "return Exit for input exit" in {
-      parseGameMode("exit") shouldBe GameMode.Exit
+    "reject text" in {
+      parseNumberOfPlayers("abc") shouldBe None
     }
 
-    "return Invalid for empty input" in {
-      parseGameMode("") shouldBe GameMode.Invalid
+    "reject decimal numbers" in {
+      parseNumberOfPlayers("3.5") shouldBe None
     }
 
-    "return Invalid for unknown input" in {
-      parseGameMode("invalid") shouldBe GameMode.Invalid
-    }
-
-    "return Invalid for whitespace input" in {
-      parseGameMode(" ") shouldBe GameMode.Invalid
-    }
-  }
-
-  "runGameMenu" should {
-
-    "exit when the user enters exit" in {
-      val inputs = Iterator("exit")
-      var messages = List.empty[String]
-      var startedModes = List.empty[GameMode]
-
-      runGameMenu(
-        readInput = () => inputs.next(),
-        printMessage = message => messages = messages :+ message,
-        startGame = mode => startedModes = startedModes :+ mode
-      )
-
-      messages should contain("Exiting Dominion…")
-      startedModes shouldBe empty
-    }
-
-    "exit when the input stream reaches EOF" in {
-      var messages = List.empty[String]
-      var startedModes = List.empty[GameMode]
-
-      runGameMenu(
-        readInput = () => null,
-        printMessage = message => messages = messages :+ message,
-        startGame = mode => startedModes = startedModes :+ mode
-      )
-
-      messages should contain("Exiting Dominion…")
-      startedModes shouldBe empty
-    }
-
-    "print help and continue until exit" in {
-      val inputs = Iterator("help", "exit")
-      var messages = List.empty[String]
-
-      runGameMenu(
-        readInput = () => inputs.next(),
-        printMessage = message => messages = messages :+ message,
-        startGame = _ => fail("No game should be started")
-      )
-
-      messages should contain("print help… feature coming soon™")
-      messages should contain("Exiting Dominion…")
-    }
-
-    "report empty input and continue until exit" in {
-      val inputs = Iterator("", "exit")
-      var messages = List.empty[String]
-
-      runGameMenu(
-        readInput = () => inputs.next(),
-        printMessage = message => messages = messages :+ message,
-        startGame = _ => fail("No game should be started")
-      )
-
-      messages should contain("Empty Input")
-      messages should contain("Exiting Dominion…")
-    }
-
-    "report invalid input and continue until exit" in {
-      val inputs = Iterator("abc", "exit")
-      var messages = List.empty[String]
-
-      runGameMenu(
-        readInput = () => inputs.next(),
-        printMessage = message => messages = messages :+ message,
-        startGame = _ => fail("No game should be started")
-      )
-
-      messages should contain("Invalid/Unknown input")
-      messages should contain("Exiting Dominion…")
-    }
-
-    "start Cheat Mode and continue until exit" in {
-      val inputs = Iterator("0", "exit")
-      var startedModes = List.empty[GameMode]
-
-      runGameMenu(
-        readInput = () => inputs.next(),
-        printMessage = _ => (),
-        startGame = mode => startedModes = startedModes :+ mode
-      )
-
-      startedModes shouldBe List(GameMode.CheatMode)
-    }
-
-    "start Starter Deck and continue until exit" in {
-      val inputs = Iterator("1", "exit")
-      var startedModes = List.empty[GameMode]
-
-      runGameMenu(
-        readInput = () => inputs.next(),
-        printMessage = _ => (),
-        startGame = mode => startedModes = startedModes :+ mode
-      )
-
-      startedModes shouldBe List(GameMode.StandardDeck)
+    "reject empty input" in {
+      parseNumberOfPlayers("") shouldBe None
     }
   }
 
-  "initGame" should {
+  "readNumberOfPlayers" should {
 
-    "read a valid player count and print it" in {
-      val inputs = Iterator("4")
-      var messages = List.empty[String]
+    "return the number for valid input" in {
+      val inputs = mutable.Queue("4")
+      val messages = mutable.Queue.empty[String]
 
-      initGame(
-        readInput = () => inputs.next(),
-        printMessage = message => messages = messages :+ message
+      val result = readNumberOfPlayers(
+        () => inputs.dequeue(),
+        message => messages.enqueue(message)
       )
 
       messages should contain("Enter number of Players:")
-      messages should contain("Number of Players: 4")
+      result shouldBe 4
     }
 
-    "retry after invalid input before initializing the game" in {
-      val inputs = Iterator("abc", "1", "5")
-      var messages = List.empty[String]
+    "print an error for invalid input" in {
+      val inputs = mutable.Queue("abc", "5")
+      val messages = mutable.Queue.empty[String]
 
-      initGame(
-        readInput = () => inputs.next(),
-        printMessage = message => messages = messages :+ message
+      val result = readNumberOfPlayers(
+        () => inputs.dequeue(),
+        message => messages.enqueue(message)
       )
 
-      messages should contain("Invalid input! Enter an integer between 2 and 8.")
-      messages should contain("Number of Players: 5")
+      result shouldBe 5
+      messages should contain(
+        "Invalid input! Enter an integer between 2 and 8."
+      )
     }
 
-    "accept the minimum player count" in {
-      val inputs = Iterator("2")
-      var messages = List.empty[String]
+    "ask again after invalid input" in {
+      val inputs = mutable.Queue("abc", "1", "9", "3")
+      val messages = mutable.Queue.empty[String]
 
-      initGame(
-        readInput = () => inputs.next(),
-        printMessage = message => messages = messages :+ message
+      val result = readNumberOfPlayers(
+        () => inputs.dequeue(),
+        message => messages.enqueue(message)
       )
 
-      messages should contain("Number of Players: 2")
+      result shouldBe 3
+
+      messages.count(_ == "Enter number of Players:") shouldBe 4
+
+      messages.count(
+        _ == "Invalid input! Enter an integer between 2 and 8."
+      ) shouldBe 3
+    }
+  }
+
+  "An InitGame" should {
+
+    "initialize the correct number of players" in {
+      val game = new InitGame(
+        readInput = () => "3",
+        printMessage = _ => ()
+      )
+
+      game.currentPlayer.id shouldBe 1
     }
 
-    "accept the maximum player count" in {
-      val inputs = Iterator("8")
-      var messages = List.empty[String]
-
-      initGame(
-        readInput = () => inputs.next(),
-        printMessage = message => messages = messages :+ message
+    "return the current player" in {
+      val game = new InitGame(
+        readInput = () => "3",
+        printMessage = _ => ()
       )
 
-      messages should contain("Number of Players: 8")
+      game.currentPlayer.id shouldBe 1
+    }
+
+    "advance to the next player" in {
+      val game = new InitGame(
+        readInput = () => "3",
+        printMessage = _ => ()
+      )
+
+      game.nextTurn()
+
+      game.currentPlayer.id shouldBe 2
+    }
+
+    "advance through all players and return to the first player" in {
+      val game = new InitGame(
+        readInput = () => "3",
+        printMessage = _ => ()
+      )
+
+      game.nextTurn()
+      game.nextTurn()
+
+      game.currentPlayer.id shouldBe 3
+
+      game.nextTurn()
+
+      game.currentPlayer.id shouldBe 1
+    }
+
+    "support a game with only one player" in {
+      val game = new InitGame(
+        readInput = () => "1",
+        printMessage = _ => ()
+      )
+
+      game.currentPlayer.id shouldBe 1
+
+      game.nextTurn()
+
+      game.currentPlayer.id shouldBe 1
     }
   }
 }
