@@ -1,3 +1,4 @@
+
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatest.matchers.should.Matchers
 
@@ -55,10 +56,10 @@ class InitGameSpec extends AnyWordSpec with Matchers {
         8
       )
 
+      result shouldBe 4
       messages should contain(
         "Enter an integer between 2 and 8:"
       )
-      result shouldBe 4
     }
 
     "print an error for invalid input" in {
@@ -100,7 +101,7 @@ class InitGameSpec extends AnyWordSpec with Matchers {
       ) shouldBe 3
     }
 
-    "use the specified range in the messages and validation" in {
+    "use the specified range in messages and validation" in {
       val inputs = mutable.Queue("0", "15")
       val messages = mutable.Queue.empty[String]
 
@@ -125,18 +126,23 @@ class InitGameSpec extends AnyWordSpec with Matchers {
 
   "InitGame" should {
 
-    "initialize with the first player" in {
+    "initialize with the first player and selected playset" in {
+      val inputs = mutable.Queue("3", "1")
+
       val game = new InitGame(
-        readInput = () => "3",
+        readInput = () => inputs.dequeue(),
         printMessage = _ => ()
       )
 
       game.currentPlayer.id shouldBe 1
+      game.selectedPlaySet shouldBe PlaySet.SizeDistortion
     }
 
     "return the next player after nextTurn" in {
+      val inputs = mutable.Queue("3", "0")
+
       val game = new InitGame(
-        readInput = () => "3",
+        readInput = () => inputs.dequeue(),
         printMessage = _ => ()
       )
 
@@ -146,8 +152,10 @@ class InitGameSpec extends AnyWordSpec with Matchers {
     }
 
     "return to the first player after the last player" in {
+      val inputs = mutable.Queue("2", "0")
+
       val game = new InitGame(
-        readInput = () => "2",
+        readInput = () => inputs.dequeue(),
         printMessage = _ => ()
       )
 
@@ -159,8 +167,10 @@ class InitGameSpec extends AnyWordSpec with Matchers {
     }
 
     "support the minimum valid number of players" in {
+      val inputs = mutable.Queue("2", "0")
+
       val game = new InitGame(
-        readInput = () => "2",
+        readInput = () => inputs.dequeue(),
         printMessage = _ => ()
       )
 
@@ -171,8 +181,10 @@ class InitGameSpec extends AnyWordSpec with Matchers {
     }
 
     "support the maximum valid number of players" in {
+      val inputs = mutable.Queue("8", "5")
+
       val game = new InitGame(
-        readInput = () => "8",
+        readInput = () => inputs.dequeue(),
         printMessage = _ => ()
       )
 
@@ -184,6 +196,18 @@ class InitGameSpec extends AnyWordSpec with Matchers {
 
       game.nextTurn()
       game.currentPlayer.id shouldBe 1
+    }
+
+    "read the player count and playset independently" in {
+      val inputs = mutable.Queue("4", "3")
+
+      val game = new InitGame(
+        readInput = () => inputs.dequeue(),
+        printMessage = _ => ()
+      )
+
+      game.currentPlayer.id shouldBe 1
+      game.selectedPlaySet shouldBe PlaySet.SleightOfHand
     }
   }
 }

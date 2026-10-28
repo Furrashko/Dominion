@@ -35,10 +35,39 @@ def readNumberInput(
   loop()
 }
 
+enum PlaySet(val id: Int, val displayName: String) {
+  case FirstGame extends PlaySet(0, "First Game (Base)")
+  case SizeDistortion extends PlaySet(1, "Size Distortion (Base)")
+  case DeckTop extends PlaySet(2, "Deck Top (Base)")
+  case SleightOfHand extends PlaySet(3, "Sleight of Hand (Base)")
+  case Improvements extends PlaySet(4, "Improvements (Base)")
+  case SilverAndGold extends PlaySet(5, "Silver & Gold (Base)")
+}
+
 class InitGame(
-                readInput: () => String, 
-                printMessage: String => Unit) {
-  private val playerCount = readNumberInput(readInput, printMessage, 2, 8)
+                readInput: () => String,
+                printMessage: String => Unit
+              ) {
+  println("Number of Players:")
+  private val playerCount =
+    readNumberInput(readInput, printMessage, 2, 8)
+
+  println(s"Number of Players selected: $playerCount")
+
+  println("Select Playset:")
+  PlaySet.values.foreach { playSet =>
+    println(s"${playSet.id}: ${playSet.displayName}")
+  }
+
+  private val playSetId =
+    readNumberInput(readInput, printMessage, 0, 5)
+
+  private val playSet =
+    PlaySet.fromId(playSetId).get
+
+  def selectedPlaySet: PlaySet = playSet
+
+  println(s"Playset selected: ${playSet.displayName}")
 
   private val players: Vector[Player] =
     (1 to playerCount).map(id => new Player(id)).toVector
@@ -52,4 +81,9 @@ class InitGame(
     currentPlayerIndex =
       (currentPlayerIndex + 1) % players.size
   }
+}
+
+object PlaySet {
+  def fromId(id: Int): Option[PlaySet] =
+    PlaySet.values.find(_.id == id)
 }
