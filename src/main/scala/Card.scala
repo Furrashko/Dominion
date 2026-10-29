@@ -4,6 +4,7 @@ enum CardType:
     case Action
     case Territory
 
-class Card(val name: String, val cost: Int, val deck: PlaySet, val cardType: CardType) {
-  
-}
+class Card(val name: String,
+            val cost: Int,
+            val deck: PlaySet,
+            val cardType: CardType) {}
