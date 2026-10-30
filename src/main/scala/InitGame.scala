@@ -26,7 +26,7 @@ def readNumberInput(
 
       case None =>
         printMessage(
-          s"Invalid input! Enter an integer between $min and $max."
+          s"Invalid input! Enter an integer between $min and $max.\n"
         )
         loop()
     }
@@ -44,6 +44,11 @@ enum PlaySet(val id: Int, val displayName: String) {
   case SilverAndGold extends PlaySet(5, "Silver & Gold (Base)")
 }
 
+object PlaySet {
+  def fromId(id: Int): Option[PlaySet] =
+    PlaySet.values.find(_.id == id)
+}
+
 class InitGame(
                 readInput: () => String,
                 printMessage: String => Unit
@@ -52,7 +57,7 @@ class InitGame(
   private val playerCount =
     readNumberInput(readInput, printMessage, 2, 8)
 
-  println(s"Number of Players selected: $playerCount")
+  println(s"Number of Players selected: $playerCount\n")
 
   println("Select Playset:")
   PlaySet.values.foreach { playSet =>
@@ -67,7 +72,7 @@ class InitGame(
 
   def selectedPlaySet: PlaySet = playSet
 
-  println(s"Playset selected: ${playSet.displayName}")
+  println(s"Playset selected: ${playSet.displayName}\n")
 
   private val players: Vector[Player] =
     (1 to playerCount).map(id => Player(id)).toVector
@@ -81,9 +86,4 @@ class InitGame(
     currentPlayerIndex =
       (currentPlayerIndex + 1) % players.size
   }
-}
-
-object PlaySet {
-  def fromId(id: Int): Option[PlaySet] =
-    PlaySet.values.find(_.id == id)
 }

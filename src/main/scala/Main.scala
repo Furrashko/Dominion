@@ -23,16 +23,17 @@ def runGameMenu(
                  printMessage: String => Unit,
                  startGame: GameMode => Unit
                ): Unit = {
-  printMessage(
-    """-- Choose Game-mode: --
-      |Type 0 for Cheat Mode.
-      |Type 1 for Starter Deck.
-      |Type "help" to get help.
-      |Type "exit" to terminate the session.""".stripMargin
-  )
 
   @tailrec
   def loop(): Unit = {
+    printMessage(
+      f"""\n-- Choose Game-mode: --
+        |Type 0 for Cheat Mode.
+        |Type 1 for Starter Deck.
+        |Type "help" to get help.
+        |Type "exit" to terminate the session.\n""".stripMargin
+    )
+
     Option(readInput()) match {
       case None =>
         printMessage("Exiting Dominion...")
@@ -80,6 +81,7 @@ def runGameMenu(
         println("Cheat Mode selected.")
 
       case GameMode.StandardDeck =>
+        println("StandardDeck selected.\n")
         val game = new InitGame(
           readInput = () => readLine(),
           printMessage = message => println(message)

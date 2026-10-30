@@ -75,7 +75,7 @@ class InitGameSpec extends AnyWordSpec with Matchers {
 
       result shouldBe 5
       messages should contain(
-        "Invalid input! Enter an integer between 2 and 8."
+        "Invalid input! Enter an integer between 2 and 8.\n"
       )
     }
 
@@ -97,7 +97,7 @@ class InitGameSpec extends AnyWordSpec with Matchers {
       ) shouldBe 4
 
       messages.count(
-        _ == "Invalid input! Enter an integer between 2 and 8."
+        _ == "Invalid input! Enter an integer between 2 and 8.\n"
       ) shouldBe 3
     }
 
@@ -119,7 +119,7 @@ class InitGameSpec extends AnyWordSpec with Matchers {
       )
 
       messages should contain(
-        "Invalid input! Enter an integer between 1 and 20."
+        "Invalid input! Enter an integer between 1 and 20.\n"
       )
     }
   }
