@@ -29,7 +29,7 @@ class RunGameMenuSpec extends AnyWordSpec with Matchers {
         startGame = mode => startedModes = startedModes :+ mode
       )
 
-      messages should contain("Exiting Dominion…")
+      messages should contain("Exiting Dominion...")
       startedModes shouldBe empty
     }
 

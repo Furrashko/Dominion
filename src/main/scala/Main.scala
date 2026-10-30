@@ -36,7 +36,7 @@ def runGameMenu(
 
     Option(readInput()) match {
       case None =>
-        printMessage("Exiting Dominion…")
+        printMessage("Exiting Dominion...")
 
       case Some(input) =>
         parseGameMode(input) match {
