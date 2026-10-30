@@ -65,7 +65,7 @@ class InitGame(
   }
 
   private val playSetId =
-    readNumberInput(readInput, printMessage, 0, 5)
+    readNumberInput(readInput, printMessage, 0, PlaySet.values.length - 1)
 
   private val playSet =
     PlaySet.fromId(playSetId).get
