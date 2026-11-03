@@ -1,3 +1,4 @@
+import dominion.{GameMode, parseGameMode, runGameMenu}
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatest.matchers.should.Matchers
 
