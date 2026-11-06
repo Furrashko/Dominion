@@ -1,8 +1,8 @@
 package dominion.controller
 
 import dominion.model.*
-import org.scalatest.wordspec.AnyWordSpec
 import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
 
 class MainMenuControllerSpec extends AnyWordSpec with Matchers {
 

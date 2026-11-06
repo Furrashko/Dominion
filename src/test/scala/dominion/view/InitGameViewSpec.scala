@@ -1,8 +1,8 @@
 package dominion.view
 
 import dominion.model.PlaySet
-import org.scalatest.wordspec.AnyWordSpec
 import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
 
 class InitGameViewSpec extends AnyWordSpec with Matchers {
 
