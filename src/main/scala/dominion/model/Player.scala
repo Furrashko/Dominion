@@ -13,8 +13,6 @@ class Player(
   private val deck = new Deck
   private val discardPile = new DiscardPile
 
-  // Draw a card from the deck.
-  // If the deck is empty, refill it from the discard pile.
   def drawCard(): Option[Card] = {
 
     if (deck.isEmpty && !discardPile.isEmpty) {
@@ -28,22 +26,24 @@ class Player(
     deck.draw()
   }
 
-  // Add a card to the discard pile.
   def discardCard(card: Card): Unit =
     discardPile.add(card)
 
-  // Inspect the top cards of the discard pile.
   def discardPileCards(count: Int): List[Card] =
     discardPile.peekTop(count)
 
-  // Remove a specific card by its position.
   def takeDiscardCard(index: Int): Option[Card] =
     discardPile.takeAt(index)
 
-  // Information about the stacks.
   def deckSize: Int =
     deck.size
 
   def discardPileSize: Int =
     discardPile.size
+
+  def addCardToDeck(card: Card): Unit =
+    deck.addToTop(card)
+
+  def addCardsToDeck(cards: List[Card]): Unit =
+    deck.addAllToTop(cards)
 }
