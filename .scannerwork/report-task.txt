@@ -2,5 +2,5 @@ projectKey=Dominion
 serverUrl=http://localhost:9000
 serverVersion=26.10.0.133078
 dashboardUrl=http://localhost:9000/dashboard?id=Dominion
-ceTaskId=ebae7b56-eae9-49a5-85f1-a74579779c6a
-ceTaskUrl=http://localhost:9000/api/ce/task?id=ebae7b56-eae9-49a5-85f1-a74579779c6a
+ceTaskId=74c8d766-d8b6-42ff-8e56-7d9216be3504
+ceTaskUrl=http://localhost:9000/api/ce/task?id=74c8d766-d8b6-42ff-8e56-7d9216be3504
