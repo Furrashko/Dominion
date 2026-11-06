@@ -46,7 +46,7 @@ class MainMenuControllerSpec extends AnyWordSpec with Matchers {
       controller.run()
 
       messages should contain("print help... feature coming soon™")
-      messages.count(_ contains "Choose Game-mode") shouldBe 2
+      messages.count(_.contains("Choose Game-mode")) shouldBe 2
     }
 
     "select Cheat Mode and return to the menu" in {
@@ -62,7 +62,7 @@ class MainMenuControllerSpec extends AnyWordSpec with Matchers {
       controller.run()
 
       messages should contain("Cheat Mode selected.")
-      messages.count(_ contains "Choose Game-mode") shouldBe 2
+      messages.count(_.contains("Choose Game-mode")) shouldBe 2
     }
 
     "show an error for unknown input" in {
