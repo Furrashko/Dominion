@@ -1,6 +1,7 @@
 package dominion.controller
 
 import dominion.model.*
+import dominion.util.PlaySet
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatest.matchers.should.Matchers
 
