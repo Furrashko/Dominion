@@ -5,6 +5,7 @@ import scala.annotation.tailrec
 
 import dominion.model.*
 import dominion.view.InitGameView
+import dominion.util.PlaySet
 
 object InitGameController {
 

@@ -1,6 +1,6 @@
 package dominion.view
 
-import dominion.model.PlaySet
+import dominion.util.PlaySet
 
 class InitGameView(printMessage: String => Unit) {
 

@@ -1,4 +1,4 @@
-package dominion.model
+package dominion.util
 
 enum PlaySet(val id: Int, val displayName: String):
   case FirstGame

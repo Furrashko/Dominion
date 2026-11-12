@@ -1,4 +1,5 @@
 package dominion.model
+import dominion.util.PlaySet
 
 class Game(
             val players: Vector[Player],
