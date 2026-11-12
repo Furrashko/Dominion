@@ -8,3 +8,6 @@ project/metals.sbt
 .idea/
 .vscode/
 .DS_Store
+sonar-project.properties
+.scannerwork/
+report-task.txt
