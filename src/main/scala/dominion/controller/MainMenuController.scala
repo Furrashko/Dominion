@@ -18,7 +18,7 @@ class MainMenuController(
                           startGame: Game => Unit
                         ) {
 
-  private val view = new MainMenuView(printMessage)
+  private val view = new MainMenuView(printMessage) // OBSERVER PATTERN
 
   private def parseMenuSelection(input: String): MenuSelection =
     input match {

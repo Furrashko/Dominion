@@ -1,8 +1,6 @@
 package dominion.view
 
-class MainMenuView(
-                    printMessage: String => Unit
-                  ) {
+class MainMenuView(printMessage: String => Unit) {
 
   def showMenu(): Unit = {
     printMessage(

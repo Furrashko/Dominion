@@ -2,9 +2,7 @@ package dominion.view
 
 import dominion.model.PlaySet
 
-class InitGameView(
-                    printMessage: String => Unit
-                  ) {
+class InitGameView(printMessage: String => Unit) {
 
   def showPlayerCountPrompt(): Unit =
     printMessage("Number of Players:")
