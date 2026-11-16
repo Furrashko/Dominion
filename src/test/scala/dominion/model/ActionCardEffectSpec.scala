@@ -58,4 +58,61 @@ class ActionCardEffectSpec extends AnyWordSpec with Matchers {
       an[IllegalArgumentException] should be thrownBy AddBuysEffect(-1)
     }
   }
+
+  "A Village" should {
+    "give 3 extra actions" in {
+      val player = new Player(1)
+      player.addCardToDeck(BasicCards.copper)
+
+      new ActionCards.Village().play(player)
+
+      player.handCards shouldBe List(BasicCards.copper)
+      player.perRoundActions shouldBe 3
+    }
+  }
+
+  "A Smithy" should {
+    "draw 3 cards" in {
+      val player = new Player(1)
+      player.addCardsToDeck(List(
+        BasicCards.copper,
+        BasicCards.silver,
+        BasicCards.gold
+      ))
+
+      new ActionCards.Smithy().play(player)
+
+      player.handCards shouldBe List(
+        BasicCards.copper,
+        BasicCards.silver,
+        BasicCards.gold
+      )
+    }
+  }
+
+  "A Market" should {
+    "give one more Buy" in {
+      val player = new Player(1)
+
+      new ActionCards.Market().play(player)
+
+      player.perRoundBuys shouldBe 2
+    }
+
+    "give one more Action" in {
+      val player = new Player(1)
+
+      new ActionCards.Market().play(player)
+
+      player.perRoundActions shouldBe 2
+    }
+
+    "give one more Money" in {
+      val player = new Player(1)
+
+      new ActionCards.Market().play(player)
+
+      player.perRoundMoney shouldBe 1
+    }
+  }
 }
