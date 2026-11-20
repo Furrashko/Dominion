@@ -146,5 +146,45 @@ class PlayerSpec extends AnyWordSpec with Matchers {
 
       player.drawCard() shouldBe None
     }
+
+    "reject negative draw counts" in {
+      val player = new Player(1)
+
+      val exception = intercept[IllegalArgumentException] {
+        player.drawCardsToHand(-1)
+      }
+
+      exception.getMessage shouldBe "requirement failed: Draw count cannot be negative"
+    }
+
+    "reject negative action amounts" in {
+      val player = new Player(1)
+
+      val exception = intercept[IllegalArgumentException] {
+        player.addActions(-1)
+      }
+
+      exception.getMessage shouldBe "requirement failed: Action amount cannot be negative"
+    }
+
+    "reject negative money amounts" in {
+      val player = new Player(1)
+
+      val exception = intercept[IllegalArgumentException] {
+        player.addMoney(-1)
+      }
+
+      exception.getMessage shouldBe "requirement failed: Money amount cannot be negative"
+    }
+
+    "reject negative buy amounts" in {
+      val player = new Player(1)
+
+      val exception = intercept[IllegalArgumentException] {
+        player.addBuys(-1)
+      }
+
+      exception.getMessage shouldBe "requirement failed: Buy amount cannot be negative"
+    }
   }
 }
