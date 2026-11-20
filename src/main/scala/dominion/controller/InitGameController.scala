@@ -4,8 +4,16 @@ package dominion.controller
 import scala.annotation.tailrec
 
 import dominion.model.*
-import dominion.view.InitGameView
-import dominion.util.PlaySet
+import dominion.util.{Observable, PlaySet}
+
+enum InitGameEvent {
+  case ShowPlayerCountPrompt
+  case PlayerCountSelected(count: Int)
+  case ShowPlaySetSelection
+  case ShowPlaySets
+  case PlaySetSelected(playSet: PlaySet)
+  case InvalidInput(min: Int, max: Int)
+}
 
 object InitGameController {
 
@@ -20,11 +28,8 @@ object InitGameController {
 }
 
 class InitGameController(
-                          readInput: () => String,
-                          printMessage: String => Unit
-                        ) {
-
-  private val view = new InitGameView(printMessage)
+                          readInput: () => String
+                        ) extends Observable[InitGameEvent] {
 
   private def readNumberInput(
                                min: Int,
@@ -33,11 +38,7 @@ class InitGameController(
 
     @tailrec
     def loop(): Option[Int] = {
-
-      printMessage(s"Enter an integer between $min and $max:")
-
       Option(readInput()) match {
-
         case None =>
           None
 
@@ -47,12 +48,13 @@ class InitGameController(
             min,
             max
           ) match {
-
             case Some(number) =>
               Some(number)
 
             case None =>
-              view.showInvalidInput(min, max)
+              notifyObservers(
+                InitGameEvent.InvalidInput(min, max)
+              )
               loop()
           }
       }
@@ -74,19 +76,31 @@ class InitGameController(
 
   def run(): Option[Game] = {
 
-    view.showPlayerCountPrompt()
+    notifyObservers(
+      InitGameEvent.ShowPlayerCountPrompt
+    )
 
     readNumberInput(2, 8).flatMap { count =>
 
-      view.showSelectedPlayerCount(count)
-      view.showPlaySetSelection()
-      view.showPlaySets()
+      notifyObservers(
+        InitGameEvent.PlayerCountSelected(count)
+      )
+
+      notifyObservers(
+        InitGameEvent.ShowPlaySetSelection
+      )
+
+      notifyObservers(
+        InitGameEvent.ShowPlaySets
+      )
 
       readNumberInput(0, PlaySet.values.length - 1)
         .flatMap(PlaySet.fromId)
         .map { playSet =>
 
-          view.showSelectedPlaySet(playSet)
+          notifyObservers(
+            InitGameEvent.PlaySetSelected(playSet)
+          )
 
           createGame(
             playerCount = count,

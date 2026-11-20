@@ -1,5 +1,7 @@
+
 package dominion.view
 
+import dominion.controller.InitGameEvent
 import dominion.util.PlaySet
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
@@ -12,7 +14,7 @@ class InitGameViewSpec extends AnyWordSpec with Matchers {
       var messages = Vector.empty[String]
       val view = new InitGameView(message => messages :+= message)
 
-      view.showPlayerCountPrompt()
+      view.update(InitGameEvent.ShowPlayerCountPrompt)
 
       messages shouldBe Vector("Number of Players:")
     }
@@ -21,7 +23,7 @@ class InitGameViewSpec extends AnyWordSpec with Matchers {
       var messages = Vector.empty[String]
       val view = new InitGameView(message => messages :+= message)
 
-      view.showSelectedPlayerCount(4)
+      view.update(InitGameEvent.PlayerCountSelected(4))
 
       messages shouldBe Vector("Number of Players selected: 4\n")
     }
@@ -30,7 +32,7 @@ class InitGameViewSpec extends AnyWordSpec with Matchers {
       var messages = Vector.empty[String]
       val view = new InitGameView(message => messages :+= message)
 
-      view.showPlaySetSelection()
+      view.update(InitGameEvent.ShowPlaySetSelection)
 
       messages shouldBe Vector("Select Playset:")
     }
@@ -39,7 +41,7 @@ class InitGameViewSpec extends AnyWordSpec with Matchers {
       var messages = Vector.empty[String]
       val view = new InitGameView(message => messages :+= message)
 
-      view.showPlaySets()
+      view.update(InitGameEvent.ShowPlaySets)
 
       messages shouldBe PlaySet.values.map { playSet =>
         s"${playSet.id}: ${playSet.displayName}"
@@ -50,7 +52,9 @@ class InitGameViewSpec extends AnyWordSpec with Matchers {
       var messages = Vector.empty[String]
       val view = new InitGameView(message => messages :+= message)
 
-      view.showSelectedPlaySet(PlaySet.FirstGame)
+      view.update(
+        InitGameEvent.PlaySetSelected(PlaySet.FirstGame)
+      )
 
       messages shouldBe Vector(
         s"Playset selected: ${PlaySet.FirstGame.displayName}\n"
@@ -61,7 +65,7 @@ class InitGameViewSpec extends AnyWordSpec with Matchers {
       var messages = Vector.empty[String]
       val view = new InitGameView(message => messages :+= message)
 
-      view.showInvalidInput(2, 8)
+      view.update(InitGameEvent.InvalidInput(2, 8))
 
       messages shouldBe Vector(
         "Invalid input! Enter an integer between 2 and 8.\n"
