@@ -1,42 +1,25 @@
+
 package dominion.model
 
 object BasicCards {
 
   // Victory Cards
-  val estate = new VictoryCard(
-    name = "Estate",
-    cost = 2,
-    victoryPoints = 1
-  )
+  val estate: VictoryCard =
+    CardFactory.createEstate()
 
-  val duchy = new VictoryCard(
-    name = "Duchy",
-    cost = 5,
-    victoryPoints = 3
-  )
+  val duchy: VictoryCard =
+    CardFactory.createDuchy()
 
-  val province = new VictoryCard(
-    name = "Province",
-    cost = 8,
-    victoryPoints = 6
-  )
+  val province: VictoryCard =
+    CardFactory.createProvince()
 
   // Treasure Cards
-  val copper = new TreasureCard(
-    name = "Copper",
-    cost = 0,
-    value = 1
-  )
+  val copper: TreasureCard =
+    CardFactory.createCopper()
 
-  val silver = new TreasureCard(
-    name = "Silver",
-    cost = 3,
-    value = 2
-  )
+  val silver: TreasureCard =
+    CardFactory.createSilver()
 
-  val gold = new TreasureCard(
-    name = "Gold",
-    cost = 6,
-    value = 3
-  )
+  val gold: TreasureCard =
+    CardFactory.createGold()
 }
