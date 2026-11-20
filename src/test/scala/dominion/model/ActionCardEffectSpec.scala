@@ -1,5 +1,6 @@
 package dominion.model
 
+import dominion.model.actioncard.{Market, Smithy, Village}
 import dominion.model.effects.*
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
@@ -35,7 +36,7 @@ class ActionCardEffectSpec extends AnyWordSpec with Matchers {
       val player = new Player(1)
       player.addCardToDeck(BasicCards.copper)
 
-      new ActionCards.Village().play(player)
+      new Village().play(player)
 
       player.handCards shouldBe List(BasicCards.copper)
       player.perRoundActions shouldBe 3
@@ -64,7 +65,7 @@ class ActionCardEffectSpec extends AnyWordSpec with Matchers {
       val player = new Player(1)
       player.addCardToDeck(BasicCards.copper)
 
-      new ActionCards.Village().play(player)
+      new Village().play(player)
 
       player.handCards shouldBe List(BasicCards.copper)
       player.perRoundActions shouldBe 3
@@ -80,7 +81,7 @@ class ActionCardEffectSpec extends AnyWordSpec with Matchers {
         BasicCards.gold
       ))
 
-      new ActionCards.Smithy().play(player)
+      new Smithy().play(player)
 
       player.handCards shouldBe List(
         BasicCards.copper,
@@ -94,7 +95,7 @@ class ActionCardEffectSpec extends AnyWordSpec with Matchers {
     "give one more Buy" in {
       val player = new Player(1)
 
-      new ActionCards.Market().play(player)
+      new Market().play(player)
 
       player.perRoundBuys shouldBe 2
     }
@@ -102,7 +103,7 @@ class ActionCardEffectSpec extends AnyWordSpec with Matchers {
     "give one more Action" in {
       val player = new Player(1)
 
-      new ActionCards.Market().play(player)
+      new Market().play(player)
 
       player.perRoundActions shouldBe 2
     }
@@ -110,7 +111,7 @@ class ActionCardEffectSpec extends AnyWordSpec with Matchers {
     "give one more Money" in {
       val player = new Player(1)
 
-      new ActionCards.Market().play(player)
+      new Market().play(player)
 
       player.perRoundMoney shouldBe 1
     }
