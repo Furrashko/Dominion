@@ -23,6 +23,7 @@ class GameSpec extends AnyWordSpec with Matchers {
 
       game.players.size shouldBe 2
       game.currentPlayer.id shouldBe 1
+      game.currentPhase shouldBe TurnPhase.Action
     }
 
     "initialize with eight players" in {
@@ -48,25 +49,61 @@ class GameSpec extends AnyWordSpec with Matchers {
       game.playSet shouldBe None
     }
 
-    "advance to the next player" in {
+    "start in the Action phase" in {
       val game = new Game(
-        Vector(Player(1), Player(2), Player(3)),
+        Vector(Player(1), Player(2)),
         GameMode.StandardDeck,
-        Some(PlaySet.FirstGame)
+        None
       )
 
-      game.nextTurn()
-      game.currentPlayer.id shouldBe 2
+      game.currentPhase shouldBe TurnPhase.Action
+    }
 
-      game.nextTurn()
-      game.currentPlayer.id shouldBe 3
+    "advance from Action to Buy phase" in {
+      val game = new Game(
+        Vector(Player(1), Player(2)),
+        GameMode.StandardDeck,
+        None
+      )
+
+      game.advancePhase()
+
+      game.currentPhase shouldBe TurnPhase.Buy
+    }
+
+    "advance from Buy to Cleanup phase" in {
+      val game = new Game(
+        Vector(Player(1), Player(2)),
+        GameMode.StandardDeck,
+        None
+      )
+
+      game.advancePhase()
+      game.advancePhase()
+
+      game.currentPhase shouldBe TurnPhase.Cleanup
+    }
+
+    "advance to the next player after Cleanup" in {
+      val game = new Game(
+        Vector(Player(1), Player(2)),
+        GameMode.StandardDeck,
+        None
+      )
+
+      game.advancePhase()
+      game.advancePhase()
+      game.advancePhase()
+
+      game.currentPlayer.id shouldBe 2
+      game.currentPhase shouldBe TurnPhase.Action
     }
 
     "return to the first player after the last player" in {
       val game = new Game(
         Vector(Player(1), Player(2)),
         GameMode.StandardDeck,
-        Some(PlaySet.FirstGame)
+        None
       )
 
       game.nextTurn()
@@ -74,6 +111,44 @@ class GameSpec extends AnyWordSpec with Matchers {
 
       game.nextTurn()
       game.currentPlayer.id shouldBe 1
+    }
+
+    "reset the phase when manually advancing the turn" in {
+      val game = new Game(
+        Vector(Player(1), Player(2)),
+        GameMode.StandardDeck,
+        None
+      )
+
+      game.advancePhase()
+      game.currentPhase shouldBe TurnPhase.Buy
+
+      game.nextTurn()
+
+      game.currentPhase shouldBe TurnPhase.Action
+      game.currentPlayer.id shouldBe 2
+    }
+
+    "advance through all phases repeatedly" in {
+      val game = new Game(
+        Vector(Player(1), Player(2)),
+        GameMode.StandardDeck,
+        None
+      )
+
+      game.advancePhase()
+      game.currentPhase shouldBe TurnPhase.Buy
+
+      game.advancePhase()
+      game.currentPhase shouldBe TurnPhase.Cleanup
+
+      game.advancePhase()
+      game.currentPhase shouldBe TurnPhase.Action
+
+      game.currentPlayer.id shouldBe 2
+
+      game.advancePhase()
+      game.currentPhase shouldBe TurnPhase.Buy
     }
 
     "reject a game with fewer than two players" in {

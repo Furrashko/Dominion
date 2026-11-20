@@ -65,13 +65,12 @@ class InitGameController(
                   playerCount: Int,
                   gameMode: GameMode,
                   playSet: Option[PlaySet]
-                ): Game = {
-
-    val players =
-      (1 to playerCount).map(id => Player(id)).toVector
-
-    new Game(players, gameMode, playSet)
-  }
+                ): Game =
+    GameFactory.create(
+      playerCount,
+      gameMode,
+      playSet
+    )
 
   def run(): Option[Game] = {
 

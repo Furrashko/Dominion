@@ -4,16 +4,20 @@ trait Observer[T] {
   def update(value: T): Unit
 }
 
-trait Observable[T]:
-  var observers: Set[Observer[T]] = Set.empty
+/**
+ * Basic observable implementation.
+ * Observer registration is encapsulated so callers cannot modify the set directly.
+ */
+trait Observable[T] {
 
-  def addObserver(observer: Observer[T]): Unit = {
-    observers += observer
-  }
-  def removeObserver(observer: Observer[T]): Unit = {
-    observers -= observer
-  }
+  private var registeredObservers: Set[Observer[T]] = Set.empty
 
-  def notifyObservers(value: T): Unit = {
-    observers.foreach(_.update(value))
-  }
+  def addObserver(observer: Observer[T]): Unit =
+    registeredObservers += observer
+
+  def removeObserver(observer: Observer[T]): Unit =
+    registeredObservers -= observer
+
+  def notifyObservers(value: T): Unit =
+    registeredObservers.foreach(_.update(value))
+}
