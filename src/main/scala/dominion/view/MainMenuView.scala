@@ -1,8 +1,23 @@
 package dominion.view
 
-class MainMenuView(printMessage: String => Unit) {
+import dominion.controller.MainMenuEvent
+import dominion.util.Observer
 
-  def showMenu(): Unit = {
+class MainMenuView(
+                    printMessage: String => Unit
+                  ) extends Observer[MainMenuEvent] {
+
+  override def update(event: MainMenuEvent): Unit = {
+    event match {
+      case MainMenuEvent.ShowMenu =>
+        showMenu()
+
+      case MainMenuEvent.ShowMessage(message) =>
+        showMessage(message)
+    }
+  }
+
+  private def showMenu(): Unit = {
     printMessage(
       """
         |-- Choose Game-mode: --
@@ -14,6 +29,6 @@ class MainMenuView(printMessage: String => Unit) {
     )
   }
 
-  def showMessage(message: String): Unit =
+  private def showMessage(message: String): Unit =
     printMessage(message)
 }

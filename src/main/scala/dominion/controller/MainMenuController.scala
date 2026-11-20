@@ -4,19 +4,18 @@ import scala.annotation.tailrec
 
 import dominion.controller.strategy.*
 import dominion.model.Game
-import dominion.view.MainMenuView
+import dominion.util.Observable
+
+enum MainMenuEvent {
+  case ShowMenu
+  case ShowMessage(message: String)
+}
 
 class MainMenuController(
                           readInput: () => String,
                           printMessage: String => Unit,
                           startGame: Game => Unit
-                        ) {
-
-  private val view = new MainMenuView(printMessage)
-
-  /*
-  view soll nich von hier aufgerufen werden. es ruft obseerver auf
-   */
+                        ) extends Observable[MainMenuEvent] {
 
   private val strategies: Map[String, MenuStrategy] = Map(
     "0" -> new CheatModeStrategy(printMessage),
@@ -29,13 +28,13 @@ class MainMenuController(
 
     @tailrec
     def loop(): Unit = {
-      //hier
-      view.showMenu()
+      notifyObservers(MainMenuEvent.ShowMenu)
 
       Option(readInput()) match {
         case None =>
-          //hier
-          view.showMessage("Exiting Dominion...")
+          notifyObservers(
+            MainMenuEvent.ShowMessage("Exiting Dominion...")
+          )
 
         case Some(input) =>
           strategies.get(input) match {
@@ -44,13 +43,11 @@ class MainMenuController(
                 loop()
 
             case None =>
-              if (input.isEmpty) {
-                //qdf
-                view.showMessage("Empty Input")
-              } else {
-                //asdf
-                view.showMessage("Invalid/Unknown input")
-              }
+              val message =
+                if (input.isEmpty) "Empty Input"
+                else "Invalid/Unknown input"
+
+              notifyObservers(MainMenuEvent.ShowMessage(message))
               loop()
           }
       }

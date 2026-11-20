@@ -4,6 +4,7 @@ import scala.io.StdIn.readLine
 
 import dominion.controller.MainMenuController
 import dominion.model.Game
+import dominion.view.MainMenuView
 
 // $COVERAGE-OFF$
 @main def main(): Unit = {
@@ -20,6 +21,12 @@ import dominion.model.Game
       println(s"PlaySet: ${game.playSet}")
     }
   )
+
+  val view = new MainMenuView(
+    printMessage = message => println(message)
+  )
+
+  controller.addObserver(view)
 
   controller.run()
 
