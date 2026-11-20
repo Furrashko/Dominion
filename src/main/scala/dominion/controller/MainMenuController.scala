@@ -14,6 +14,10 @@ class MainMenuController(
 
   private val view = new MainMenuView(printMessage)
 
+  /*
+  view soll nich von hier aufgerufen werden. es ruft obseerver auf
+   */
+
   private val strategies: Map[String, MenuStrategy] = Map(
     "0" -> new CheatModeStrategy(printMessage),
     "1" -> new StandardGameStrategy(readInput, printMessage, startGame),
@@ -25,10 +29,12 @@ class MainMenuController(
 
     @tailrec
     def loop(): Unit = {
+      //hier
       view.showMenu()
 
       Option(readInput()) match {
         case None =>
+          //hier
           view.showMessage("Exiting Dominion...")
 
         case Some(input) =>
@@ -38,10 +44,13 @@ class MainMenuController(
                 loop()
 
             case None =>
-              if (input.isEmpty)
+              if (input.isEmpty) {
+                //qdf
                 view.showMessage("Empty Input")
-              else
+              } else {
+                //asdf
                 view.showMessage("Invalid/Unknown input")
+              }
               loop()
           }
       }
