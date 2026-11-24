@@ -16,7 +16,7 @@ class Deck(initialCards: List[Card] = Nil) {
   def peek: Option[Card] =
     cards.headOption
 
-  def draw(): Option[Card] = {
+  def draw(): Option[Card] =
     cards match {
       case head :: tail =>
         cards = tail
@@ -25,7 +25,6 @@ class Deck(initialCards: List[Card] = Nil) {
       case Nil =>
         None
     }
-  }
 
   def addToTop(card: Card): Unit =
     cards = card :: cards
@@ -41,4 +40,12 @@ class Deck(initialCards: List[Card] = Nil) {
 
   def clear(): Unit =
     cards = Nil
+
+  private[model] def cardsSnapshot: List[Card] =
+    cards
+
+  private[model] def restore(
+                              snapshot: List[Card]
+                            ): Unit =
+    cards = snapshot
 }
