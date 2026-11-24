@@ -21,7 +21,8 @@ private case class GameSnapshot(
   phase: TurnPhase,
   players: Vector[PlayerSnapshot],
   table: Map[String, Int],
-  ended: Boolean
+  ended: Boolean,
+  playersWithStartedTurn: Set[Int]
 )
 
 class Game(
@@ -54,6 +55,12 @@ class Game(
   private var currentPlayerIndex = 0
   private var phase = TurnPhase.Action
   private var ended = false
+
+  // GameFactory deals five cards to every player before the game starts.
+  // Player 1 is already taking their first turn; the others still have
+  // their initial five-card hand waiting for their first turn.
+  private var playersWithStartedTurn: Set[Int] = Set(0)
+
   private var past = List.empty[GameSnapshot]
   private var future = List.empty[GameSnapshot]
   private var bufferedEvents: Option[Vector[GameEvent]] = None
@@ -76,12 +83,20 @@ class Game(
   }
 
   private def snapshot: GameSnapshot =
-    GameSnapshot(currentPlayerIndex, phase, players.map(_.snapshot), playTable.snapshot, ended)
+    GameSnapshot(
+      currentPlayerIndex,
+      phase,
+      players.map(_.snapshot),
+      playTable.snapshot,
+      ended,
+      playersWithStartedTurn
+    )
 
   private def restore(state: GameSnapshot): Unit = {
     currentPlayerIndex = state.currentPlayerIndex
     phase = state.phase
     ended = state.ended
+    playersWithStartedTurn = state.playersWithStartedTurn
     players.zip(state.players).foreach { case (player, playerState) =>
       player.restore(playerState)
     }
@@ -185,27 +200,36 @@ class Game(
       case TurnPhase.Action =>
         phase = TurnPhase.Buy
         emit(TurnPhaseChanged(currentPlayer, phase))
+
       case TurnPhase.Buy =>
         phase = TurnPhase.Cleanup
         emit(TurnPhaseChanged(currentPlayer, phase))
+
       case TurnPhase.Cleanup =>
         currentPlayer.discardHand()
         currentPlayer.discardPlayedCards()
+
         currentPlayerIndex = (currentPlayerIndex + 1) % players.size
         phase = TurnPhase.Action
         currentPlayer.resetTurnResources()
-        val drawn = currentPlayer.drawCardsToHand(5)
-        emit(CardDrawn(currentPlayer, drawn))
+
+        val drawn =
+          if (playersWithStartedTurn.contains(currentPlayerIndex)) {
+            currentPlayer.drawCardsToHand(5)
+          } else {
+            // The initial five-card hand was already dealt by GameFactory.
+            playersWithStartedTurn += currentPlayerIndex
+            Nil
+          }
+
+        if (drawn.nonEmpty) emit(CardDrawn(currentPlayer, drawn))
         emit(CurrentPlayerChanged(currentPlayer))
         emit(TurnPhaseChanged(currentPlayer, phase))
         emit(ResourcesChanged(currentPlayer))
     }
   }
 
-  /**
-   * Compatibility helper that completes the rest of the current turn.
-   * It still passes through the normal phases and performs Cleanup.
-   */
+  /** Completes the rest of the current turn through the normal phase transitions. */
   def nextTurn(): Unit =
     phase match {
       case TurnPhase.Action =>
