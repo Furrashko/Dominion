@@ -2,9 +2,10 @@
 package dominion.controller
 
 import dominion.model.*
+import dominion.model.playset.PlaySetCatalog
 import dominion.util.{Observer, PlaySet}
-import org.scalatest.wordspec.AnyWordSpec
 import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
 
 class InitGameControllerSpec extends AnyWordSpec with Matchers {
 
@@ -18,9 +19,8 @@ class InitGameControllerSpec extends AnyWordSpec with Matchers {
   private def controller(
                           inputs: Iterator[String]
                         ): (InitGameController, TestObserver) = {
-
     val instance = new InitGameController(
-      () => inputs.next()
+      () => if (inputs.hasNext) inputs.next() else null
     )
 
     val observer = new TestObserver
@@ -66,6 +66,10 @@ class InitGameControllerSpec extends AnyWordSpec with Matchers {
     "reject whitespace around a number" in {
       InitGameController.parseNumberInput(" 5 ", 2, 8) shouldBe None
     }
+
+    "reject negative input" in {
+      InitGameController.parseNumberInput("-1", 2, 8) shouldBe None
+    }
   }
 
   "InitGameController.createGame" should {
@@ -97,7 +101,43 @@ class InitGameControllerSpec extends AnyWordSpec with Matchers {
       game.players should have size 8
       game.players.map(_.id) shouldBe (1 to 8).toVector
       game.gameMode shouldBe GameMode.CheatMode
-      game.playSet shouldBe None
+      game.playSet shouldBe Some(PlaySet.FirstGame)
+    }
+
+    "deal five initial cards to every player" in {
+      val instance = new InitGameController(() => "0")
+
+      val game = instance.createGame(
+        4,
+        GameMode.StandardDeck,
+        Some(PlaySet.FirstGame)
+      )
+
+      all(game.players.map(_.handSize)) shouldBe 5
+    }
+
+    "leave five cards in every player's draw pile" in {
+      val instance = new InitGameController(() => "0")
+
+      val game = instance.createGame(
+        4,
+        GameMode.StandardDeck,
+        Some(PlaySet.FirstGame)
+      )
+
+      all(game.players.map(_.deckSize)) shouldBe 5
+    }
+
+    "create independent player instances" in {
+      val instance = new InitGameController(() => "0")
+
+      val game = instance.createGame(
+        2,
+        GameMode.StandardDeck,
+        None
+      )
+
+      (game.players(0) eq game.players(1)) shouldBe false
     }
 
     "reject fewer than two players" in {
@@ -142,24 +182,22 @@ class InitGameControllerSpec extends AnyWordSpec with Matchers {
 
     "create a game with the minimum player count" in {
       val (instance, _) = controller(
-        Iterator("2", "1")
+        Iterator("2", "0")
       )
 
       val result = instance.run()
 
       result.get.players should have size 2
-      result.get.playSet shouldBe Some(PlaySet.SizeDistortion)
     }
 
     "create a game with the maximum player count" in {
       val (instance, _) = controller(
-        Iterator("8", "5")
+        Iterator("8", "0")
       )
 
       val result = instance.run()
 
       result.get.players should have size 8
-      result.get.playSet shouldBe Some(PlaySet.SilverAndGold)
     }
 
     "publish an invalid input event and retry after invalid player count" in {
@@ -176,51 +214,106 @@ class InitGameControllerSpec extends AnyWordSpec with Matchers {
       )
     }
 
-    "publish an invalid input event and retry after invalid playset selection" in {
+    "publish an invalid event for an unavailable PlaySet" in {
       val (instance, observer) = controller(
-        Iterator("2", "invalid", "6", "2")
+        Iterator("2", "1", "0")
       )
 
       val result = instance.run()
 
-      result.get.playSet shouldBe Some(PlaySet.DeckTop)
+      result shouldBe defined
+      result.get.playSet shouldBe Some(PlaySet.FirstGame)
 
       observer.events should contain(
-        InitGameEvent.InvalidInput(0, PlaySet.values.length - 1)
+        InitGameEvent.InvalidPlaySetInput(
+          PlaySetCatalog.availablePlaySets.map(_.id)
+        )
       )
     }
 
-    "publish the initial prompt events" in {
+    "reject an unavailable PlaySet identifier" in {
+      val (instance, observer) = controller(
+        Iterator("2", "999", "0")
+      )
+
+      instance.run() shouldBe defined
+
+      observer.events.count {
+        case InitGameEvent.InvalidPlaySetInput(_) => true
+        case _ => false
+      } shouldBe 1
+    }
+
+    "reject non-numeric PlaySet input" in {
+      val (instance, observer) = controller(
+        Iterator("2", "invalid", "0")
+      )
+
+      instance.run() shouldBe defined
+
+      observer.events should contain(
+        InitGameEvent.InvalidPlaySetInput(
+          PlaySetCatalog.availablePlaySets.map(_.id)
+        )
+      )
+    }
+
+    "publish the initial prompt events in the correct order" in {
       val (instance, observer) = controller(
         Iterator("2", "0")
       )
 
       instance.run()
 
-      observer.events should contain(
-        InitGameEvent.ShowPlayerCountPrompt
-      )
-
-      observer.events should contain(
-        InitGameEvent.ShowPlaySetSelection
-      )
-
-      observer.events should contain(
+      observer.events.take(4) shouldBe Vector(
+        InitGameEvent.ShowPlayerCountPrompt,
+        InitGameEvent.PlayerCountSelected(2),
+        InitGameEvent.ShowPlaySetSelection,
         InitGameEvent.ShowPlaySets
       )
     }
 
+    "publish the selected PlaySet as the last event" in {
+      val (instance, observer) = controller(
+        Iterator("2", "0")
+      )
+
+      instance.run()
+
+      observer.events.last shouldBe
+        InitGameEvent.PlaySetSelected(PlaySet.FirstGame)
+    }
+
     "return None when player count input is null" in {
-      val (instance, _) = controller(
+      val (instance, observer) = controller(
         Iterator(null)
       )
 
       instance.run() shouldBe None
+
+      observer.events shouldBe Vector(
+        InitGameEvent.ShowPlayerCountPrompt
+      )
     }
 
-    "return None when playset input is null" in {
-      val (instance, _) = controller(
+    "return None when PlaySet input is null" in {
+      val (instance, observer) = controller(
         Iterator("2", null)
+      )
+
+      instance.run() shouldBe None
+
+      observer.events should contain(
+        InitGameEvent.ShowPlaySets
+      )
+
+      observer.events should not contain
+        InitGameEvent.PlaySetSelected(PlaySet.FirstGame)
+    }
+
+    "not create a game when player count input is invalid and terminates" in {
+      val (instance, _) = controller(
+        Iterator("invalid", null)
       )
 
       instance.run() shouldBe None

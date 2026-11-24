@@ -25,7 +25,7 @@ class DiscardPile(initialCards: List[Card] = Nil) {
   def addAll(newCards: List[Card]): Unit =
     cards = newCards ::: cards
 
-  def draw(): Option[Card] = {
+  def draw(): Option[Card] =
     cards match {
       case head :: tail =>
         cards = tail
@@ -34,7 +34,6 @@ class DiscardPile(initialCards: List[Card] = Nil) {
       case Nil =>
         None
     }
-  }
 
   def takeTop(count: Int): List[Card] = {
     require(count >= 0, "Count cannot be negative")
@@ -52,7 +51,6 @@ class DiscardPile(initialCards: List[Card] = Nil) {
       val (before, after) = cards.splitAt(index)
       val selectedCard = after.head
       cards = before ::: after.tail
-
       Some(selectedCard)
     }
   }
@@ -62,4 +60,12 @@ class DiscardPile(initialCards: List[Card] = Nil) {
     cards = Nil
     removedCards
   }
+
+  private[model] def cardsSnapshot: List[Card] =
+    cards
+
+  private[model] def restore(
+                              snapshot: List[Card]
+                            ): Unit =
+    cards = snapshot
 }

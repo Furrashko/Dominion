@@ -1,0 +1,51 @@
+package dominion.model.table
+
+import dominion.model.*
+
+/**
+ * The physical supply area of a game.
+ *
+ * PlaySet composition is deliberately not defined here. Use PlayTableFactory
+ * with a validated PlaySetDefinition to create a table.
+ */
+final class PlayTable(initialPiles: List[(Card, Int)]) {
+
+  private val piles: Map[String, CardPile] =
+    initialPiles.map { case (card, amount) =>
+      card.name -> new CardPile(card, amount)
+    }.toMap
+
+  require(piles.size == initialPiles.size, "Card pile names must be unique")
+
+  def allPiles: List[CardPile] =
+    piles.values.toList.sortBy(_.card.name)
+
+  def getPile(name: String): Option[CardPile] =
+    piles.get(name)
+
+  def availableCards: List[Card] =
+    allPiles.filterNot(_.isEmpty).map(_.card)
+
+  def buyCard(name: String): Option[Card] =
+    piles.get(name).flatMap(_.take())
+
+  def isPileEmpty(name: String): Boolean =
+    piles.get(name).forall(_.isEmpty)
+
+  def emptyPileCount: Int =
+    piles.values.count(_.isEmpty)
+
+  def isGameOver: Boolean =
+    isPileEmpty("Province") || emptyPileCount >= 3
+
+  private[model] def snapshot: Map[String, Int] =
+    piles.view.mapValues(_.count).toMap
+
+  private[model] def restore(amounts: Map[String, Int]): Unit = {
+    require(amounts.keySet == piles.keySet,
+      "Snapshot does not match the current play table")
+    amounts.foreach { case (name, amount) =>
+      piles(name).restore(amount)
+    }
+  }
+}
