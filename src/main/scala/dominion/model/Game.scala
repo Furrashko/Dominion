@@ -29,10 +29,8 @@ class Game(
   val playTable: PlayTable
 ) extends Observable[GameEvent] {
 
-  require(players.size >= 2 && players.size <= 8,
-    "A game requires between 2 and 8 players.")
-  require(players.map(_.id).distinct.size == players.size,
-    "Player IDs must be unique.")
+  require(players.size >= 2 && players.size <= 8, "A game requires between 2 and 8 players.")
+  require(players.map(_.id).distinct.size == players.size, "Player IDs must be unique.")
 
   private var currentPlayerIndex = 0
   private var phase = TurnPhase.Action
@@ -58,21 +56,13 @@ class Game(
   }
 
   private def snapshot: GameSnapshot =
-    GameSnapshot(
-      currentPlayerIndex,
-      phase,
-      players.map(_.snapshot),
-      playTable.snapshot,
-      ended
-    )
+    GameSnapshot(currentPlayerIndex, phase, players.map(_.snapshot), playTable.snapshot, ended)
 
   private def restore(state: GameSnapshot): Unit = {
     currentPlayerIndex = state.currentPlayerIndex
     phase = state.phase
     ended = state.ended
-    players.zip(state.players).foreach { case (player, playerState) =>
-      player.restore(playerState)
-    }
+    players.zip(state.players).foreach { case (player, playerState) => player.restore(playerState) }
     playTable.restore(state.table)
   }
 
@@ -91,28 +81,20 @@ class Game(
     }
   }
 
-  def playAction(
-    card: ActionCard,
-    decisions: DecisionProvider = DecisionProvider.default
-  ): Unit = execute {
+  def playAction(card: ActionCard, decisions: DecisionProvider = DecisionProvider.default): Unit = execute {
     ensurePhase(TurnPhase.Action)
     require(currentPlayer.availableActions > 0, "No actions available")
-    require(currentPlayer.handCards.exists(_ eq card),
-      "Card is not in the player's hand")
-
+    require(currentPlayer.handCards.exists(_ eq card), "Card is not in the player's hand")
     currentPlayer.useAction()
     require(currentPlayer.playCard(card), "Card could not be played")
-
     card.play(new ActionContext(this, currentPlayer, playTable, decisions))
-
     notifyObservers(CardPlayed(currentPlayer, card))
     notifyObservers(ResourcesChanged(currentPlayer))
   }
 
   def playTreasure(card: TreasureCard): Unit = execute {
     ensurePhase(TurnPhase.Buy)
-    require(currentPlayer.handCards.exists(_ eq card),
-      "Card is not in the player's hand")
+    require(currentPlayer.handCards.exists(_ eq card), "Card is not in the player's hand")
     require(currentPlayer.playTreasure(card), "Treasure could not be played")
     notifyObservers(CardPlayed(currentPlayer, card))
     notifyObservers(ResourcesChanged(currentPlayer))
@@ -125,19 +107,24 @@ class Game(
     }
     require(!pile.isEmpty, s"$name pile is empty")
     val card = pile.card
-
     require(currentPlayer.availableBuys > 0, "No buys available")
     require(currentPlayer.availableMoney >= card.cost, "Not enough money")
-
     currentPlayer.spendMoney(card.cost)
     currentPlayer.useBuy()
     val boughtCard = playTable.buyCard(name).get
     currentPlayer.discardCard(boughtCard)
-
     notifyObservers(CardBought(currentPlayer, boughtCard))
     notifyObservers(SupplyChanged(boughtCard, pile.count))
     notifyObservers(ResourcesChanged(currentPlayer))
     checkGameEnd()
+  }
+
+  /** Called by ActionContext while playAction owns the transaction/history snapshot. */
+  private[model] def gainFromSupply(name: String): Option[Card] = {
+    val pile = playTable.getPile(name)
+    val gained = playTable.buyCard(name)
+    gained.foreach(card => notifyObservers(SupplyChanged(card, pile.map(_.count).getOrElse(0))))
+    gained
   }
 
   def advancePhase(): Unit = execute {
@@ -145,11 +132,9 @@ class Game(
       case TurnPhase.Action =>
         phase = TurnPhase.Buy
         notifyObservers(TurnPhaseChanged(currentPlayer, phase))
-
       case TurnPhase.Buy =>
         phase = TurnPhase.Cleanup
         notifyObservers(TurnPhaseChanged(currentPlayer, phase))
-
       case TurnPhase.Cleanup =>
         cleanupCurrentPlayer()
         currentPlayerIndex = (currentPlayerIndex + 1) % players.size
@@ -184,32 +169,28 @@ class Game(
       ended = true
       val scores = currentScores
       val highestScore = scores.values.max
-      val winners = scores.collect {
-        case (id, score) if score == highestScore => id
-      }.toList
+      val winners = scores.collect { case (id, score) if score == highestScore => id }.toList
       notifyObservers(GameEnded(scores, winners))
     }
   }
 
-  def undo(): Boolean =
-    past match {
-      case previous :: remaining =>
-        future = snapshot :: future
-        past = remaining
-        restore(previous)
-        notifyObservers(GameStateRestored)
-        true
-      case Nil => false
-    }
+  def undo(): Boolean = past match {
+    case previous :: remaining =>
+      future = snapshot :: future
+      past = remaining
+      restore(previous)
+      notifyObservers(GameStateRestored)
+      true
+    case Nil => false
+  }
 
-  def redo(): Boolean =
-    future match {
-      case next :: remaining =>
-        past = snapshot :: past
-        future = remaining
-        restore(next)
-        notifyObservers(GameStateRestored)
-        true
-      case Nil => false
-    }
+  def redo(): Boolean = future match {
+    case next :: remaining =>
+      past = snapshot :: past
+      future = remaining
+      restore(next)
+      notifyObservers(GameStateRestored)
+      true
+    case Nil => false
+  }
 }
