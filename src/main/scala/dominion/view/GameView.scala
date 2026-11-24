@@ -1,28 +1,41 @@
 package dominion.view
 
+import dominion.controller.{GameController, GameControllerEvent}
 import dominion.model.*
 import dominion.model.table.CardPile
 import dominion.util.Observer
+import scala.annotation.tailrec
 
-/** Observer projection of the game state. */
-final class GameView(printMessage: String => Unit) extends Observer[GameEvent] {
+/** TUI view: observes controller events and handles interactive card decisions. */
+final class GameView(
+  readInput: () => String,
+  printMessage: String => Unit
+) extends Observer[GameControllerEvent] with DecisionProvider {
+
+  private var observedController: Option[GameController] = None
   private var observedGame: Option[Game] = None
 
-  def attach(game: Game): Unit = {
-    observedGame.foreach(_.removeObserver(this))
-    observedGame = Some(game)
-    game.addObserver(this)
-    render()
+  def attach(controller: GameController): Unit = {
+    detach()
+    observedController = Some(controller)
+    observedGame = Some(controller.game)
+    controller.addObserver(this)
   }
 
   def detach(): Unit = {
-    observedGame.foreach(_.removeObserver(this))
+    observedController.foreach(_.removeObserver(this))
+    observedController = None
     observedGame = None
   }
 
-  override def update(event: GameEvent): Unit = event match {
-    case _: GameUpdated | GameStateRestored => render()
-    case _ => ()
+  override def update(event: GameControllerEvent): Unit = event match {
+    case GameControllerEvent.ShowGame => render()
+    case GameControllerEvent.ShowHelp => showHelp()
+    case GameControllerEvent.ShowPrompt(message) => printMessage(message)
+    case GameControllerEvent.ShowMessage(message) => printMessage(message)
+    case GameControllerEvent.GameChanged(_: GameUpdated) => render()
+    case GameControllerEvent.GameChanged(GameStateRestored) => ()
+    case GameControllerEvent.GameChanged(_) => ()
   }
 
   def render(): Unit =
@@ -30,6 +43,119 @@ final class GameView(printMessage: String => Unit) extends Observer[GameEvent] {
 
   def renderSupply(): Unit =
     observedGame.foreach(game => printMessage(GameView.renderSupply(game)))
+
+  private def showHelp(): Unit =
+    printMessage(
+      """Befehle:
+        |  play <index>       Aktionskarte (Action) oder Schatzkarte (Buy) spielen
+        |  treasure <index>   Schatzkarte spielen (Buy)
+        |  buy <Kartenname>   Karte aus dem Vorrat kaufen
+        |  phase              Zur nächsten Phase wechseln
+        |  undo               Letzten Spielzug rückgängig machen
+        |  redo               Rückgängig gemachten Spielzug wiederholen
+        |  status             Spielzustand anzeigen
+        |  help               Diese Hilfe anzeigen
+        |  quit               Spiel verlassen
+        |
+        |Handkarten sind mit 1-basierten Indizes nummeriert.""".stripMargin
+    )
+
+  override def chooseCardsToDiscard(
+    player: Player,
+    candidates: List[Card],
+    count: Int
+  ): List[Card] = {
+    if (count <= 0) Nil
+    else {
+      printCards(s"Spieler ${player.id}: Wähle genau $count Karte(n) zum Abwerfen.", candidates)
+      readIndices(candidates, Some(count), allowEmpty = false)
+        .getOrElse(candidates.indices.take(count).toList)
+        .map(candidates)
+    }
+  }
+
+  override def chooseCellarDiscards(
+    player: Player,
+    candidates: List[Card]
+  ): List[Card] = {
+    printCards(s"Spieler ${player.id}: Cellar – Karten abwerfen? Leer = keine.", candidates)
+    readIndices(candidates, None, allowEmpty = true).getOrElse(Nil).map(candidates)
+  }
+
+  override def chooseCardToTrash(
+    player: Player,
+    candidates: List[Card]
+  ): Option[Card] = {
+    if (candidates.isEmpty) None
+    else {
+      printCards(s"Spieler ${player.id}: Karte zerstören? Leer = keine.", candidates)
+      readIndices(candidates, Some(1), allowEmpty = true)
+        .flatMap(_.headOption).map(candidates)
+    }
+  }
+
+  override def chooseCardToGain(
+    player: Player,
+    candidates: List[Card],
+    maxCost: Int
+  ): Option[Card] = {
+    if (candidates.isEmpty) None
+    else {
+      printCards(s"Spieler ${player.id}: Karte bis Kosten $maxCost gewinnen? Leer = keine.", candidates)
+      readIndices(candidates, Some(1), allowEmpty = true)
+        .flatMap(_.headOption).map(candidates)
+    }
+  }
+
+  override def shouldRevealMoat(defendingPlayer: Player): Boolean = {
+    printMessage(s"Spieler ${defendingPlayer.id}: Moat aufdecken? (j/n)")
+    Option(readInput()).getOrElse("").trim.toLowerCase match {
+      case "j" | "ja" | "y" | "yes" => true
+      case _ => false
+    }
+  }
+
+  private def printCards(prompt: String, cards: List[Card]): Unit = {
+    printMessage(prompt)
+    cards.zipWithIndex.foreach { case (card, index) =>
+      printMessage(s"  ${index + 1}. ${card.name} (Kosten ${card.cost})")
+    }
+  }
+
+  private def readIndices(
+    cards: List[Card],
+    requiredCount: Option[Int],
+    allowEmpty: Boolean
+  ): Option[List[Int]] = {
+    @tailrec
+    def loop(): Option[List[Int]] = {
+      val raw = readInput()
+      if (raw == null) None
+      else {
+        val value = raw.trim
+        if (value.isEmpty && allowEmpty) Some(Nil)
+        else {
+          val indices = value.split("[,\\s]+").toList
+            .flatMap(_.toIntOption).map(_ - 1)
+          val valid =
+            indices.nonEmpty &&
+              indices.distinct.size == indices.size &&
+              indices.forall(index => index >= 0 && index < cards.size) &&
+              requiredCount.forall(_ == indices.size)
+
+          if (valid) Some(indices)
+          else {
+            val countHint = requiredCount.fold("beliebig viele")(_.toString)
+            printMessage(
+              s"Ungültige Auswahl. Gib $countHint unterschiedliche Indizes aus 1 bis ${cards.size} ein."
+            )
+            loop()
+          }
+        }
+      }
+    }
+    loop()
+  }
 }
 
 object GameView {

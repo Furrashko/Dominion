@@ -19,16 +19,23 @@ import dominion.view.{GameView, MainMenuView}
       println(s"Game Mode: ${game.gameMode}")
       println(s"PlaySet: ${game.playSet.map(_.displayName).getOrElse("Custom")}")
 
-      val gameView = new GameView(message => println(message))
-      gameView.attach(game)
-
-      val gameController = new GameController(
-        game = game,
-        readInput = () => readLine(),
+      val readGameInput = () => readLine()
+      val gameView = new GameView(
+        readInput = readGameInput,
         printMessage = message => println(message)
       )
-      gameController.run()
-      gameView.detach()
+      val gameController = new GameController(
+        game = game,
+        readInput = readGameInput,
+        decisions = gameView
+      )
+
+      gameView.attach(gameController)
+      try gameController.run()
+      finally {
+        gameView.detach()
+        gameController.close()
+      }
     }
   )
 
