@@ -2,7 +2,7 @@ package dominion
 
 import scala.io.StdIn.readLine
 
-import dominion.controller.MainMenuController
+import dominion.controller.{GameController, MainMenuController}
 import dominion.model.Game
 import dominion.view.{GameView, MainMenuView}
 
@@ -21,6 +21,14 @@ import dominion.view.{GameView, MainMenuView}
 
       val gameView = new GameView(message => println(message))
       gameView.attach(game)
+
+      val gameController = new GameController(
+        game = game,
+        readInput = () => readLine(),
+        printMessage = message => println(message)
+      )
+      gameController.run()
+      gameView.detach()
     }
   )
 

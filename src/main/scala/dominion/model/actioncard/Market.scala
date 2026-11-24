@@ -6,7 +6,7 @@ import dominion.model.effects.{AddActionsEffect, DrawCardsEffect, AddBuysEffect,
 final class Market
   extends ActionCard(
     name = "Market",
-    cost = 3,
+    cost = 5,
     effects = List(
       DrawCardsEffect(1),
       AddActionsEffect(1),
