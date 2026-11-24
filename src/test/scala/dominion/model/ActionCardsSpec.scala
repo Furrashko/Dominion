@@ -216,7 +216,7 @@ class ActionCardsSpec extends AnyWordSpec with Matchers {
 
       new Mine().play(actionContext)
 
-      player.handCards should contain(BasicCards.silver)
+      player.handCards.map(_.name) should contain("Silver")
       player.handCards should not contain BasicCards.copper
       player.discardPileSize shouldBe 0
     }

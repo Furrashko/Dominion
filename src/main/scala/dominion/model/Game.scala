@@ -32,7 +32,6 @@ class Game(
   val playTable: PlayTable
 ) extends Observable[GameEvent] {
 
-  /** Backwards-compatible constructor for callers that do not pass a table. */
   def this(
     players: Vector[Player],
     gameMode: GameMode,
@@ -56,9 +55,6 @@ class Game(
   private var phase = TurnPhase.Action
   private var ended = false
 
-  // GameFactory deals five cards to every player before the game starts.
-  // Player 1 is already taking their first turn; the others still have
-  // their initial five-card hand waiting for their first turn.
   private var playersWithStartedTurn: Set[Int] = Set(0)
 
   private var past = List.empty[GameSnapshot]
@@ -109,7 +105,6 @@ class Game(
       case None => notifyObservers(event)
     }
 
-  /** Failed commands restore the exact previous state and publish no events. */
   private def execute[A](reason: String)(operation: => A): A = {
     ensureGameRunning()
     val before = snapshot
@@ -185,7 +180,6 @@ class Game(
   private def findPile(name: String) =
     playTable.allPiles.find(_.card.name.equalsIgnoreCase(name.trim))
 
-  /** Called by ActionContext inside the surrounding playAction transaction. */
   private[model] def gainFromSupply(name: String): Option[Card] = {
     val gained = findPile(name).flatMap(pile => playTable.buyCard(pile.card.name))
     gained.foreach { card =>
@@ -194,7 +188,6 @@ class Game(
     gained
   }
 
-  /** Action -> Buy -> Cleanup -> next player's Action. */
   def advancePhase(): Unit = execute("advance-phase") {
     phase match {
       case TurnPhase.Action =>
@@ -217,7 +210,6 @@ class Game(
           if (playersWithStartedTurn.contains(currentPlayerIndex)) {
             currentPlayer.drawCardsToHand(5)
           } else {
-            // The initial five-card hand was already dealt by GameFactory.
             playersWithStartedTurn += currentPlayerIndex
             Nil
           }
@@ -229,19 +221,32 @@ class Game(
     }
   }
 
-  /** Completes the rest of the current turn through the normal phase transitions. */
-  def nextTurn(): Unit =
-    phase match {
-      case TurnPhase.Action =>
-        advancePhase()
-        advancePhase()
-        advancePhase()
-      case TurnPhase.Buy =>
-        advancePhase()
-        advancePhase()
-      case TurnPhase.Cleanup =>
-        advancePhase()
+  /**
+   * Advances directly to the next player's turn as one undoable operation.
+   * This is intentionally a compact notification API: observers receive only
+   * CurrentPlayerChanged, not the internal phase transitions or GameUpdated.
+   */
+  def nextTurn(): Unit = {
+    ensureGameRunning()
+    val before = snapshot
+
+    currentPlayer.discardHand()
+    currentPlayer.discardPlayedCards()
+
+    currentPlayerIndex = (currentPlayerIndex + 1) % players.size
+    phase = TurnPhase.Action
+    currentPlayer.resetTurnResources()
+
+    if (playersWithStartedTurn.contains(currentPlayerIndex)) {
+      currentPlayer.drawCardsToHand(5)
+    } else {
+      playersWithStartedTurn += currentPlayerIndex
     }
+
+    past = before :: past
+    future = Nil
+    notifyObservers(CurrentPlayerChanged(currentPlayer))
+  }
 
   private def checkGameEnd(): Unit = {
     if (!ended && playTable.isGameOver) {

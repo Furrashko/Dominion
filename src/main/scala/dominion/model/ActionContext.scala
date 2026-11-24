@@ -5,15 +5,10 @@ import dominion.model.table.PlayTable
 trait DecisionProvider {
   def chooseCardsToDiscard(player: Player, candidates: List[Card], count: Int): List[Card] =
     candidates.take(count)
-
   def chooseCellarDiscards(player: Player, candidates: List[Card]): List[Card] = Nil
-
-  def chooseCardToTrash(player: Player, candidates: List[Card]): Option[Card] =
-    candidates.headOption
-
+  def chooseCardToTrash(player: Player, candidates: List[Card]): Option[Card] = candidates.headOption
   def chooseCardToGain(player: Player, candidates: List[Card], maxCost: Int): Option[Card] =
     candidates.filter(_.cost <= maxCost).sortBy(card => (-card.cost, card.name)).headOption
-
   def shouldRevealMoat(defendingPlayer: Player): Boolean =
     defendingPlayer.handCards.exists(_.name == "Moat")
 }
@@ -29,9 +24,14 @@ final class ActionContext(
   val decisions: DecisionProvider
 ) {
   def discardFromHand(target: Player, selected: List[Card]): Unit = {
-    require(selected.distinct.size == selected.size, "A card cannot be selected more than once")
-    require(selected.forall(card => target.handCards.exists(_ eq card)),
-      "Every selected card must be in the player's hand")
+    // Shared BasicCards references can represent multiple physical cards.
+    // Validate multiplicity against the actual hand before changing any state.
+    val remainingCards = scala.collection.mutable.ArrayBuffer.from(target.handCards)
+    selected.foreach { card =>
+      val index = remainingCards.indexWhere(_ eq card)
+      require(index >= 0, "Every selected card must be in the player's hand")
+      remainingCards.remove(index)
+    }
     selected.foreach { card =>
       require(target.removeCardFromHand(card), "Selected card is no longer in hand")
       target.discardCard(card)
