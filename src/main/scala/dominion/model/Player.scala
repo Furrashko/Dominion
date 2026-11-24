@@ -1,25 +1,24 @@
-
 package dominion.model
 
 import scala.util.Random
 
 private[model] case class PlayerSnapshot(
-                                          deck: List[Card],
-                                          discardPile: List[Card],
-                                          hand: List[Card],
-                                          playedCards: List[Card],
-                                          actions: Int,
-                                          money: Int,
-                                          buys: Int,
-                                          treasureMoneySpent: Int
-                                        )
+  deck: List[Card],
+  discardPile: List[Card],
+  hand: List[Card],
+  playedCards: List[Card],
+  actions: Int,
+  money: Int,
+  buys: Int,
+  treasureMoneySpent: Int
+)
 
 class Player(
-              val id: Int,
-              var perRoundActions: Int = 1,
-              var perRoundMoney: Int = 0,
-              var perRoundBuys: Int = 1
-            ) {
+  val id: Int,
+  var perRoundActions: Int = 1,
+  var perRoundMoney: Int = 0,
+  var perRoundBuys: Int = 1
+) {
 
   private val deck = new Deck
   private val discardPile = new DiscardPile
@@ -29,53 +28,36 @@ class Player(
   private var treasureMoneySpent = 0
 
   def handCards: List[Card] = hand
-
   def playedCards: List[Card] = played
-
   def handSize: Int = hand.size
-
   def deckSize: Int = deck.size
-
   def discardPileSize: Int = discardPile.size
 
   def availableActions: Int = perRoundActions
 
   def availableMoney: Int =
     perRoundMoney +
-      played.collect {
-        case card: TreasureCard => card.value
-      }.sum -
+      played.collect { case card: TreasureCard => card.value }.sum -
       treasureMoneySpent
 
   def availableBuys: Int = perRoundBuys
 
   def victoryPoints: Int =
-    (
-      hand ++
-        played ++
-        discardPileCards(discardPileSize) ++
-        deck.cardsSnapshot
-      ).collect {
-      case card: VictoryCard => card.victoryPoints
-    }.sum
+    (hand ++ played ++ discardPileCards(discardPileSize) ++ deck.cardsSnapshot)
+      .collect { case card: VictoryCard => card.victoryPoints }
+      .sum
 
   def drawCard(): Option[Card] = {
     if (deck.isEmpty && !discardPile.isEmpty) {
-      val shuffledCards =
-        Random.shuffle(discardPile.removeAll())
-
+      val shuffledCards = Random.shuffle(discardPile.removeAll())
       deck.addAllToTop(shuffledCards)
     }
-
     deck.draw()
   }
 
   def drawCardsToHand(count: Int): List[Card] = {
     require(count >= 0, "Draw count cannot be negative")
-
-    val drawnCards =
-      List.fill(count)(drawCard()).flatten
-
+    val drawnCards = List.fill(count)(drawCard()).flatten
     hand = hand ++ drawnCards
     drawnCards
   }
@@ -85,7 +67,6 @@ class Player(
 
   def removeCardFromHand(card: Card): Boolean = {
     val index = hand.indexWhere(_ eq card)
-
     if (index < 0) false
     else {
       hand = hand.patch(index, Nil, 1)
@@ -146,9 +127,7 @@ class Player(
   def spendMoney(amount: Int): Unit = {
     require(amount >= 0, "Money amount cannot be negative")
     require(availableMoney >= amount, "Not enough money")
-
     val fromBonus = amount.min(perRoundMoney)
-
     perRoundMoney -= fromBonus
     treasureMoneySpent += amount - fromBonus
   }
@@ -182,19 +161,14 @@ class Player(
       treasureMoneySpent
     )
 
-  private[model] def restore(
-                              state: PlayerSnapshot
-                            ): Unit = {
+  private[model] def restore(state: PlayerSnapshot): Unit = {
     deck.restore(state.deck)
     discardPile.restore(state.discardPile)
-
     hand = state.hand
     played = state.playedCards
-
     perRoundActions = state.actions
     perRoundMoney = state.money
     perRoundBuys = state.buys
-
     treasureMoneySpent = state.treasureMoneySpent
   }
 }
