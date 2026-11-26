@@ -592,5 +592,37 @@ class GameSpec extends AnyWordSpec with Matchers {
         game.advancePhase()
       }
     }
+
+    "reject playing a treasure that is not in the hand" in {
+      val game = createGame()
+      game.advancePhase()
+
+      an[IllegalArgumentException] should be thrownBy {
+        game.playTreasure(BasicCards.copper)
+      }
+    }
+
+    "draw a new hand on the second turn when advancing through cleanup" in {
+      val players = Vector(Player(1), Player(2))
+      players.foreach { player =>
+        player.addCardsToDeck(List.fill(10)(BasicCards.copper))
+      }
+
+      val game = new Game(players, GameMode.StandardDeck, None)
+
+      var events = Vector.empty[GameEvent]
+      game.addObserver(new dominion.util.Observer[GameEvent] {
+        override def update(event: GameEvent): Unit =
+          events :+= event
+      })
+
+      (1 to 6).foreach(_ => game.advancePhase())
+
+      game.currentPlayer.id shouldBe 1
+      game.currentPlayer.handSize shouldBe 5
+      events should contain(
+        CardDrawn(game.currentPlayer, game.currentPlayer.handCards)
+      )
+    }
   }
 }

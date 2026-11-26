@@ -395,5 +395,47 @@ class GameViewSpec extends AnyWordSpec with Matchers {
         "Keine Karten mehr im Vorrat."
       )
     }
+
+    "render the final score and winner when the game is over" in {
+      val table = new dominion.model.table.PlayTable(
+        List((BasicCards.province, 0), (BasicCards.copper, 10))
+      )
+      val game = new Game(
+        Vector(Player(1), Player(2)),
+        GameMode.StandardDeck,
+        None,
+        table
+      )
+      game.players.head.addCardToHand(BasicCards.estate)
+      game.advancePhase()
+
+      val winnerLine = GameView.render(game)
+        .linesIterator.find(_.contains("SPIEL BEENDET")).get
+
+      game.isGameOver shouldBe true
+      winnerLine should include("Spieler 1")
+      winnerLine should include("1 VP")
+    }
+
+    "render every winner when the scores are tied" in {
+      val table = new dominion.model.table.PlayTable(
+        List((BasicCards.province, 0), (BasicCards.copper, 10))
+      )
+      val game = new Game(
+        Vector(Player(1), Player(2)),
+        GameMode.StandardDeck,
+        None,
+        table
+      )
+      game.players.foreach(_.addCardToHand(BasicCards.estate))
+      game.advancePhase()
+
+      val winnerLine = GameView.render(game)
+        .linesIterator.find(_.contains("SPIEL BEENDET")).get
+
+      winnerLine should include("Spieler 1")
+      winnerLine should include("Spieler 2")
+      winnerLine should include("1 VP")
+    }
   }
 }
