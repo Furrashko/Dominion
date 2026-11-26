@@ -168,9 +168,8 @@ class Game(
 
     currentPlayer.spendMoney(card.cost)
     currentPlayer.useBuy()
-    val boughtCard = playTable.buyCard(card.name).getOrElse {
-      throw new IllegalStateException(s"${card.name} pile became empty")
-    }
+    // The pile was checked above; nothing can empty it before this call.
+    val boughtCard = playTable.buyCard(card.name).get
     currentPlayer.discardCard(boughtCard)
     emit(CardBought(currentPlayer, boughtCard))
     emit(SupplyChanged(boughtCard, pile.count))
