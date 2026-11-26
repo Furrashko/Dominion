@@ -12,11 +12,8 @@ object PlayTableFactory {
     require(playerCount >= 2 && playerCount <= 8,
       "Player count must be between 2 and 8")
 
-    // Trigger validation before constructing any supply piles.
+    // PlaySetDefinition already validates count and uniqueness of the cards.
     val actionCards = definition.createActionCards
-    require(actionCards.size == 10, "A PlaySet must contain exactly ten ActionCards")
-    require(actionCards.map(_.name).distinct.size == 10,
-      "A PlaySet must contain ten differently named ActionCards")
 
     val victoryCards = if (playerCount <= 2) 8 else 12
 

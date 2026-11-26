@@ -66,6 +66,19 @@ class GameSpec extends AnyWordSpec with Matchers {
       }
     }
 
+    "explain the player-count requirement in the error message" in {
+      val exception = intercept[IllegalArgumentException] {
+        new Game(
+          Vector(Player(1)),
+          GameMode.StandardDeck,
+          None,
+          new PlayTable(Nil)
+        )
+      }
+
+      exception.getMessage should include("players")
+    }
+
     "reject more than eight players" in {
       an[IllegalArgumentException] should be thrownBy {
         new Game(
