@@ -186,5 +186,44 @@ class PlayerSpec extends AnyWordSpec with Matchers {
 
       exception.getMessage shouldBe "requirement failed: Buy amount cannot be negative"
     }
+
+    "return false when playing a card that is not in hand" in {
+      val player = new Player(1)
+
+      player.playCard(BasicCards.copper) shouldBe false
+      player.playedCards shouldBe empty
+    }
+
+    "reject using an action when none are available" in {
+      val player = new Player(1, perRoundActions = 0)
+
+      an[IllegalArgumentException] should be thrownBy {
+        player.useAction()
+      }
+    }
+
+    "reject spending a negative amount of money" in {
+      val player = new Player(1)
+
+      an[IllegalArgumentException] should be thrownBy {
+        player.spendMoney(-1)
+      }
+    }
+
+    "reject spending more money than available" in {
+      val player = new Player(1)
+
+      an[IllegalArgumentException] should be thrownBy {
+        player.spendMoney(1)
+      }
+    }
+
+    "reject using a buy when none are available" in {
+      val player = new Player(1, perRoundBuys = 0)
+
+      an[IllegalArgumentException] should be thrownBy {
+        player.useBuy()
+      }
+    }
   }
 }

@@ -478,5 +478,36 @@ class GameControllerSpec extends AnyWordSpec with Matchers {
 
       observer.events should not be empty
     }
+
+    "reject playing a victory card directly" in {
+      val game = createGame()
+      game.currentPlayer.addCardToHand(BasicCards.estate)
+      val (controller, _) = createController(game)
+
+      an[IllegalArgumentException] should be thrownBy {
+        controller.playHandCard(1)
+      }
+    }
+
+    "reject playAction outside the Action phase" in {
+      val game = createGame()
+      game.currentPlayer.addCardToHand(actionCard())
+      game.advancePhase()
+      val (controller, _) = createController(game)
+
+      an[IllegalArgumentException] should be thrownBy {
+        controller.playAction(1)
+      }
+    }
+
+    "reject playTreasure outside the Buy phase" in {
+      val game = createGame()
+      game.currentPlayer.addCardToHand(BasicCards.copper)
+      val (controller, _) = createController(game)
+
+      an[IllegalArgumentException] should be thrownBy {
+        controller.playTreasure(1)
+      }
+    }
   }
 }

@@ -86,6 +86,23 @@ class ActionCardsSpec extends AnyWordSpec with Matchers {
         new Cellar().play(actionContext)
       }
     }
+
+    "reject selecting more cards than are in hand" in {
+      val player = new Player(1)
+      player.addCardToHand(BasicCards.copper)
+
+      val decisions = new DecisionProvider {
+        override def chooseCellarDiscards(
+                                           player: Player,
+                                           candidates: List[Card]
+                                         ): List[Card] =
+          List(BasicCards.copper, BasicCards.silver)
+      }
+
+      an[IllegalArgumentException] should be thrownBy {
+        new Cellar().play(context(player, new Player(2), decisions))
+      }
+    }
   }
 
   "Militia" should {
